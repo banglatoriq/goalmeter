@@ -253,7 +253,7 @@ if menu == "ড্যাশবোর্ড (Dashboard)":
         "আজকের অলসতা মানে আগামীকালের সিস্টেম ক্র্যাশ। আপনার সিস্টেমের রানিং টাইম আপনার হাতে। মেক ইট কাউন্ট!"
     ]
     
-st.markdown(f"""
+    st.markdown(f"""
     <div class="motivational-banner">
         <h4>🔥 আজকের মনোবল বুস্টার (Daily Engineering Boost)</h4>
         <p style="font-size: 16px; font-style: italic; margin-bottom: 0;">"{random.choice(speeches)}"</p>
