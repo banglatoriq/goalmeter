@@ -278,7 +278,7 @@ if menu == "ড্যাশবোর্ড (Dashboard)":
     st.markdown("---")
     
     # Priority Tasks Display
-    st.markdown('<div class="dev-card">', unsafe_with_html=True)
+    st.markdown('<div class="dev-card">', unsafe_allow_html=True)
     st.subheader("🎯 আজকের প্রধান কাজ ও মিশন (Top Objectives)")
     with get_db_connection() as conn:
         active_goals = conn.execute("SELECT * FROM goals WHERE user_id = ? AND progress < 100 LIMIT 3", (user_id,)).fetchall()
@@ -288,7 +288,7 @@ if menu == "ড্যাশবোর্ড (Dashboard)":
             st.markdown(f"- **[{goal['category']}]** {goal['title']} — অগ্রগতি: `{goal['progress']}%`")
     else:
         st.info("বর্তমানে কোনো সক্রিয় লক্ষ্য নেই। নতুন মিশন সেট করতে বামদিকের 'লক্ষ্য নির্ধারণ' মেনুতে যান।")
-    st.markdown('</div>', unsafe_with_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.info("💡 **মনে রাখুন:** আপনার পরিচয় আপনার আচরণের আগে আসে। আপনি শুধু টাস্ক কমপ্লিট করছেন না, আপনি নিজেকে একজন মাস্টার ইঞ্জিনিয়ার হিসেবে গড়ে তুলছেন।")
 
