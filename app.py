@@ -1132,19 +1132,19 @@ def page_habits():
 
 
 # ──────────────────────────────────────────────────────────────
-#  PAGE: REVIEWS
+#   PAGE: REVIEWS
 # ──────────────────────────────────────────────────────────────
 def page_reviews():
     uid = st.session_state.user_id
     st.markdown("## 📊 Progress Reviews")
     t1, t2, t3 = st.tabs(["📅  Weekly", "🗓️  Monthly", "🏆  Yearly"])
 
-def render_review(days, label):
+    def render_review(days, label):
         hmap     = get_heatmap_df(uid, days)
         metrics  = get_metrics_df(uid, days)
         jdf      = get_journal_df(uid, days)
         
-        wr       = comp_rate(uid, days)  # <-- এই লাইনটির বাড়তি স্পেস কমিয়ে বামে আনুন
+        wr       = comp_rate(uid, days)
         
         adw      = metrics["deep_work_hrs"].mean() if not metrics.empty else 0
         asl      = metrics["sleep_hrs"].mean()     if not metrics.empty else 0
@@ -1166,7 +1166,6 @@ def render_review(days, label):
                          color_continuous_scale=["#0d1627","#0e5c70","#2dd4bf"],
                          labels={"date":"Date","pct":"Completion %"})
             fig.update_traces(marker_line_width=0)
-            # Added unique key using the label
             st.plotly_chart(chart_theme(fig), use_container_width=True, key=f"habit_chart_review_{label}")
 
         if not metrics.empty:
@@ -1178,7 +1177,6 @@ def render_review(days, label):
                                       name="Sleep (hrs)", line=dict(color="#a78bfa", width=2)))
             fig2.add_trace(go.Scatter(x=metrics["date"], y=metrics["exercise_mins"]/60,
                                       name="Exercise (hrs)", line=dict(color="#34d399", width=2)))
-            # Added unique key using the label
             st.plotly_chart(chart_theme(fig2), use_container_width=True, key=f"metrics_chart_review_{label}")
 
         if not jdf.empty and "mood" in jdf.columns:
@@ -1191,7 +1189,6 @@ def render_review(days, label):
             fig3.add_trace(go.Scatter(x=jdf["date"], y=jdf["energy"],
                                       name="Energy", line=dict(color="#f87171"), mode="lines+markers"))
             fig3.update_yaxes(range=[0, 11])
-            # Added unique key using the label
             st.plotly_chart(chart_theme(fig3), use_container_width=True, key=f"mood_chart_review_{label}")
 
     with t1:
@@ -1261,7 +1258,6 @@ def render_review(days, label):
                              labels={"period":"Month","rating":"Rating","skill":"Skill"})
             fig_sk.update_yaxes(range=[0, 11])
             st.plotly_chart(chart_theme(fig_sk), use_container_width=True, key="skills_progression_line_chart")
-
 # ──────────────────────────────────────────────────────────────
 #  PAGE: SKILLS ROADMAP
 # ──────────────────────────────────────────────────────────────
