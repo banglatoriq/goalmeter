@@ -1143,7 +1143,7 @@ def page_reviews():
         hmap     = get_heatmap_df(uid, days)
         metrics  = get_metrics_df(uid, days)
         jdf      = get_journal_df(uid, days)
-        with r_conn := conn():  # assignment expressions handle connections safely inside blocks
+        wr = comp_rate(uid, days) # assignment expressions handle connections safely inside blocks
             wr = comp_rate(uid, days)
         adw      = metrics["deep_work_hrs"].mean() if not metrics.empty else 0
         asl      = metrics["sleep_hrs"].mean()     if not metrics.empty else 0
