@@ -267,28 +267,27 @@ def init_db():
         );
         """)
         
-        # ── AUTOMATIC MIGRATIONS FOR OLD DATABASES ──
-        cursor = db.cursor()
-        
-        # Patch the 'users' table if it's missing columns from an old run
-        cursor.execute("PRAGMA table_info(users)")
-        user_columns = [row[1] for row in cursor.fetchall()]
-        if "role" not in user_columns:
+        # ── BULLETPROOF AUTOMATIC MIGRATIONS ──
+        # এই ব্লকটি পুরনো ডাটাবেজে কোনো কলাম মিসিং থাকলে তা স্বয়ংক্রিয়ভাবে ইনজেক্ট করে দেবে
+        try:
             db.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'Developer'")
-        if "stack" not in user_columns:
-            db.execute("ALTER TABLE users ADD COLUMN stack TEXT DEFAULT 'React / PHP / Python'")
+        except sqlite3.OperationalError:
+            pass
             
-        # Patch the 'habits' table if it's missing the 'slot' column
-        cursor.execute("PRAGMA table_info(habits)")
-        habit_columns = [row[1] for row in cursor.fetchall()]
-        if "slot" not in habit_columns:
+        try:
+            db.execute("ALTER TABLE users ADD COLUMN stack TEXT DEFAULT 'React / PHP / Python'")
+        except sqlite3.OperationalError:
+            pass
+            
+        try:
             db.execute("ALTER TABLE habits ADD COLUMN slot TEXT DEFAULT 'Morning'")
+        except sqlite3.OperationalError:
+            pass
 
-        # Patch the 'goals' table if it's missing the 'status' column (Fixes your current error)
-        cursor.execute("PRAGMA table_info(goals)")
-        goal_columns = [row[1] for row in cursor.fetchall()]
-        if "status" not in goal_columns:
+        try:
             db.execute("ALTER TABLE goals ADD COLUMN status TEXT DEFAULT 'active'")
+        except sqlite3.OperationalError:
+            pass
 
 init_db()
 
