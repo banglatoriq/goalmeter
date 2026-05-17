@@ -4,6 +4,7 @@ import hashlib
 import datetime
 import pandas as pd
 import plotly.express as px
+import random
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -13,21 +14,67 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CUSTOM CSS FOR DARK/DEV THEME ---
+# --- INSPIRATIONAL CYBERPUNK COLOR PALETTE & UI/UX CSS ---
 st.markdown("""
 <style>
-    .reportview-container { background: #0e1117; }
-    .metric-card {
-        background-color: #1f2937;
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #374151;
+    /* Main background and font */
+    .stApp {
+        background-color: #0B0F19;
+        color: #E2E8F0;
     }
+    
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: #111827;
+        border-right: 1px solid #1F2937;
+    }
+    
+    /* Custom Card Design for UI/UX */
+    .dev-card {
+        background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid #334155;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        margin-bottom: 20px;
+    }
+    
+    .motivational-banner {
+        background: linear-gradient(90deg, #0D9488 0%, #115E59 100%);
+        padding: 20px;
+        border-radius: 12px;
+        color: #FFFFFF;
+        border-left: 5px solid #2DD4BF;
+        margin-bottom: 25px;
+    }
+    
+    /* Metric styling adjustments */
+    div[data-testid="stMetricValue"] {
+        color: #2DD4BF !important;
+        font-weight: 800;
+    }
+    
+    div[data-testid="stMetricLabel"] {
+        color: #94A3B8 !important;
+        font-size: 14px;
+    }
+    
+    /* Button enhancement */
     .stButton>button {
-        width: 100%;
+        background-color: #0F172A;
+        color: #2DD4BF;
+        border: 1px solid #2DD4BF;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        background-color: #2DD4BF;
+        color: #0F172A;
+        box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
     }
 </style>
-""", unsafe_allow_html=True) # <-- Changed here
+""", unsafe_allow_html=True)
 
 # --- DATABASE SETUP & ARCHITECTURE ---
 DB_FILE = "devlife_os.db"
@@ -120,19 +167,19 @@ def login_user(username, password):
 
 def seed_default_habits(user_id):
     defaults = [
-        ("No Phone First 30 Mins", "Mental", "Morning"),
-        ("10 Min Stillness/Breathing", "Mental", "Morning"),
-        ("Physical Activation (15m)", "Health", "Morning"),
-        ("Deep Learning Block (60m)", "Coding", "Morning"),
-        ("High-Protein Screenless Breakfast", "Health", "Morning"),
-        ("Deep Work Block 1 (Hard Code)", "Coding", "Work"),
-        ("Reactive Tasks Window", "Coding", "Work"),
-        ("Disconnect & Walk Lunch", "Health", "Work"),
-        ("Project / Build Time", "Coding", "Work"),
-        ("Shutdown Ritual executed", "Mental", "Work"),
-        ("Posterior Chain / Strength Training", "Health", "Fitness"),
-        ("Digital Sunset @ 9:00 PM", "Health", "Night"),
-        ("Post-Work Decompression Walk", "Health", "Fitness")
+        ("সকালে ঘুম থেকে উঠে প্রথম ৩০ মিনিট ফোন না ধরা", "Mental", "Morning"),
+        ("১০ মিনিট নিরবতা বা প্রাণায়াম/Breathing", "Mental", "Morning"),
+        ("শরীর সচল করা (১৫ মিনিট হালকা ব্যায়াম)", "Health", "Morning"),
+        ("Deep Learning Block (১ ঘণ্টা গভীর পড়ালেখা)", "Coding", "Morning"),
+        ("স্ক্রিন ছাড়া পুষ্টিকর প্রাতঃরাশ/Breakfast", "Health", "Morning"),
+        ("Deep Work Block 1 (কঠিন কোডিং ও লজিক সমাধান)", "Coding", "Work"),
+        ("Reactive Tasks (ইমেইল, মেসেজ ও রিভিউ)", "Coding", "Work"),
+        ("দুপুরের খাবারে স্ক্রিন থেকে সম্পূর্ণ দূরে থাকা ও হাঁটা", "Health", "Work"),
+        ("পার্সোনাল প্রজেক্ট / নতুন কিছু বিল্ড করার সময়", "Coding", "Work"),
+        ("দিনের কাজ শেষ করার রিল্যাক্সিং রুটিন (Shutdown)", "Mental", "Work"),
+        ("স্ট্রেন্থ ট্রেনিং বা শারীরিক সুস্থতার ব্যায়াম", "Health", "Fitness"),
+        ("রাত ৯:০০ টায় সব স্ক্রিন অফ বা নাইট মোড (Digital Sunset)", "Health", "Night"),
+        ("কাজ শেষে মাইন্ড ফ্রেশ করার জন্য হাঁটা", "Health", "Fitness")
     ]
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -149,9 +196,9 @@ if 'logged_in' not in st.session_state:
 # --- AUTHENTICATION INTERFACE ---
 if not st.session_state['logged_in']:
     st.title("🧭 DevLife OS")
-    st.subheader("Your personal engineering environment for an intentional life.")
+    st.subheader("আপনার জীবনকে একটি গোছানো এবং সফল ইঞ্জিনিয়ারিং সিস্টেমে রূপান্তর করুন।")
     
-    auth_mode = st.radio("Choose Mode", ["Login", "Register"], horizontal=True)
+    auth_mode = st.radio("মোড সিলেক্ট করুন:", ["Login", "Register"], horizontal=True)
     
     with st.form("auth_form"):
         username = st.text_input("Username")
@@ -161,9 +208,9 @@ if not st.session_state['logged_in']:
         if submit:
             if auth_mode == "Register":
                 if register_user(username, password):
-                    st.success("Account created successfully! Please Switch to Login mode.")
+                    st.success("অ্যাকাউন্ট তৈরি হয়েছে! এবার Login মোড সিলেক্ট করে প্রবেশ করুন।")
                 else:
-                    st.error("Username already exists.")
+                    st.error("এই ইউজারনেমটি ইতিমধ্যে ব্যবহার করা হয়েছে।")
             else:
                 user = login_user(username, password)
                 if user:
@@ -172,7 +219,7 @@ if not st.session_state['logged_in']:
                     st.session_state['username'] = user['username']
                     st.rerun()
                 else:
-                    st.error("Invalid credentials.")
+                    st.error("সঠিক ইউজারনেম বা পাসওয়ার্ড দিন।")
     st.stop()
 
 # --- MAIN APP ARCHITECTURE (LOGGED IN) ---
@@ -181,7 +228,10 @@ today = datetime.date.today().strftime("%Y-%m-%d")
 
 # Sidebar Workspace Navigation
 st.sidebar.title(f"🚀 {st.session_state['username']}@devlife_os")
-menu = st.sidebar.radio("Navigation", ["Dashboard", "Routine Tracker", "Goal Architecture", "Advanced Reports & Analytics"])
+menu = st.sidebar.radio(
+    "কন্ট্রোল প্যানেল", 
+    ["ড্যাশবোর্ড (Dashboard)", "রুটিন ট্র্যাকার (Routine Tracker)", "লক্ষ্য নির্ধারণ (Goal Architecture)", "রিপোর্ট ও অ্যানালিটিক্স (Advanced Reports)"]
+)
 
 if st.sidebar.button("System Shutdown (Logout)"):
     st.session_state['logged_in'] = False
@@ -190,9 +240,25 @@ if st.sidebar.button("System Shutdown (Logout)"):
     st.rerun()
 
 # --- MODULE 1: DASHBOARD ---
-if menu == "Dashboard":
-    st.title("🧭 System Dashboard")
-    st.write(f"**Current Epoch:** {datetime.date.today().strftime('%A, %B %d, %Y')}")
+if menu == "ড্যাশবোর্ড (Dashboard)":
+    st.title("🧭 মূল ড্যাশবোর্ড")
+    st.write(f"📅 **আজকের তারিখ:** {datetime.date.today().strftime('%A, %B %d, %Y')}")
+    
+    # DEV-CENTRIC MOTIVATIONAL SPEECH GENERATOR
+    speeches = [
+        "কোড হোক বা জীবন—যেকোনো বড় সিস্টেমের শক্তি লুকিয়ে থাকে তার ফাউন্ডেশনের ওপর। আজকের ছোট ইনপুটটিই আগামীকালের বড় আউটপুট তৈরি করবে। ডোন্ট স্কিপ দ্য প্রসেস!",
+        "টিউটোরিয়াল দেখা সহজ, কিন্তু আসল স্কিল তৈরি হয় যখন কোড ব্রেক করে আর আপনি সেটা নিজে ডিবাগ করেন। আজ অন্তত একটা কঠিন প্রবলেম ফেস করুন!",
+        "আপনার ব্রেইনই আপনার সবচেয়ে বড় কাজের টুল (IDE)। পর্যাপ্ত ঘুম, ভালো খাবার আর শারীরিক মুভমেন্ট কোনো অপশন নয়—এটি আপনার পারফরম্যান্স কনফিগারেশন!",
+        "মার্কেটে হাজারটা জিনিস জানা ডেভলপারের অভাব নেই। কিন্তু যারা যেকোনো একটি স্ট্যাক গভীরভাবে জানে এবং প্র্যাক্টিক্যাল প্রজেক্ট বিল্ড করে, জয় তাদেরই হয়। গো ডিপ!",
+        "আজকের অলসতা মানে আগামীকালের সিস্টেম ক্র্যাশ। আপনার সিস্টেমের রানিং টাইম আপনার হাতে। মেক ইট কাউন্ট!"
+    ]
+    
+    st.markdown(f"""
+    <div class="motivational-banner">
+        <h4>🔥 আজকের মনোবল বুস্টার (Daily Engineering Boost)</h4>
+        <p style="font-size: 16px; font-style: italic; margin-bottom: 0;">"{random.choice(speeches)}"</p>
+    </div>
+    """, unsafe_with_html=True)
     
     with get_db_connection() as conn:
         total_habits = conn.execute("SELECT COUNT(*) FROM habits WHERE user_id = ?", (user_id,)).fetchone()[0]
@@ -200,29 +266,35 @@ if menu == "Dashboard":
     
     completion_rate = (completed_today / total_habits) * 100 if total_habits > 0 else 0
     
+    # Main Metrics Grid
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Today's Compilation Rate", f"{completion_rate:.1f}%", f"{completed_today}/{total_habits} Tasks")
+        st.metric("আজকের কাজ সম্পন্ন হওয়ার হার (Completion)", f"{completion_rate:.1f}%", f"{completed_today}/{total_habits} অভীষ্ট লক্ষ্য")
     with col2:
-        st.metric("System Up-Time Status", "Optimal" if completion_rate > 50 else "Degraded", "Based on daily runtime")
+        st.metric("আজকের কাজের গতি (Momentum)", "চমৎকার (Optimal)" if completion_rate > 50 else "ধীরগতির (Degraded)", "রুটিন ট্র্যাকিং এর ওপর ভিত্তি করে")
     with col3:
-        st.metric("Cognitive Infrastructure", "Configured", "Prefrontal cortex online")
+        st.metric("মানসিক প্রস্তুতি (Mindset Status)", "কনফিগারড (Ready)", "মস্তিষ্কের কর্মক্ষমতা সচল")
 
     st.markdown("---")
     
-    st.subheader("🎯 Primary Directives (MIT)")
+    # Priority Tasks Display
+    st.markdown('<div class="dev-card">', unsafe_with_html=True)
+    st.subheader("🎯 আজকের প্রধান কাজ ও মিশন (Top Objectives)")
     with get_db_connection() as conn:
         active_goals = conn.execute("SELECT * FROM goals WHERE user_id = ? AND progress < 100 LIMIT 3", (user_id,)).fetchall()
     
     if active_goals:
         for goal in active_goals:
-            st.markdown(f"- **[{goal['category']}]** {goal['title']} — Progress: `{goal['progress']}%`")
+            st.markdown(f"- **[{goal['category']}]** {goal['title']} — অগ্রগতি: `{goal['progress']}%`")
     else:
-        st.info("No active pipeline execution goals found. Go to 'Goal Architecture' to assign compilation targets.")
+        st.info("বর্তমানে কোনো সক্রিয় লক্ষ্য নেই। নতুন মিশন সেট করতে বামদিকের 'লক্ষ্য নির্ধারণ' মেনুতে যান।")
+    st.markdown('</div>', unsafe_with_html=True)
+
+    st.info("💡 **মনে রাখুন:** আপনার পরিচয় আপনার আচরণের আগে আসে। আপনি শুধু টাস্ক কমপ্লিট করছেন না, আপনি নিজেকে একজন মাস্টার ইঞ্জিনিয়ার হিসেবে গড়ে তুলছেন।")
 
 # --- MODULE 2: ROUTINE TRACKER ---
-elif menu == "Routine Tracker":
-    st.title("🌅 System Routine Engine")
+elif menu == "রুটিন ট্র্যাকার (Routine Tracker)":
+    st.title("🌅 ডেইলি রুটিন ইঞ্জিন")
     
     with get_db_connection() as conn:
         all_habits = conn.execute("SELECT * FROM habits WHERE user_id = ?", (user_id,)).fetchall()
@@ -231,10 +303,10 @@ elif menu == "Routine Tracker":
                          (user_id, habit['id'], today))
         conn.commit()
 
-    tab1, tab2, tab3 = st.tabs(["⚡ Checklists", "📝 Deep Journaling", "🧠 Brain Dump"])
+    tab1, tab2, tab3 = st.tabs(["⚡ রুটিন চেকলিস্ট (Checklists)", "📝 আজকের আত্মচিন্তন (Deep Journaling)", "🧠 মাথার অতিরিক্ত চিন্তা ঝেড়ে ফেলা (Brain Dump)"])
     
     with tab1:
-        st.subheader("Daily Execution Framework")
+        st.subheader("আপনার দৈনন্দিন রুটিন ফ্রেমওয়ার্ক")
         with get_db_connection() as conn:
             logs = conn.execute("""
                 SELECT hl.id, h.name, h.slot, hl.completed 
@@ -243,10 +315,10 @@ elif menu == "Routine Tracker":
                 WHERE hl.user_id = ? AND hl.date = ?
             """, (user_id, today)).fetchall()
             
-        slots = ["Morning", "Work", "Fitness", "Night"]
-        for slot in slots:
-            st.write(f"#### {slot} Routine")
-            slot_logs = [log for log in logs if log['slot'] == slot]
+        slots = [("Morning", "সকাল বেলার প্রস্তুতি"), ("Work", "কাজের সময় ও ফোকাস ব্লক"), ("Fitness", "শারীরিক সুস্থতা"), ("Night", "দিনের সমাপ্তি ও ঘুম")]
+        for slot_key, slot_name in slots:
+            st.write(f"#### 🕐 {slot_name}")
+            slot_logs = [log for log in logs if log['slot'] == slot_key]
             
             for log in slot_logs:
                 is_checked = bool(log['completed'])
@@ -258,22 +330,22 @@ elif menu == "Routine Tracker":
                     st.rerun()
                     
     with tab2:
-        st.subheader("Developer Reflection Node")
+        st.subheader("ডেভেলপার রিফ্লেকশন নোট")
         with get_db_connection() as conn:
             existing_j = conn.execute("SELECT * FROM journal_entries WHERE user_id = ? AND date = ?", (user_id, today)).fetchone()
             
         with st.form("journal_form"):
-            q1 = st.text_area("1. What technical problems did we solve today?", value=existing_j['q1'] if existing_j else "")
-            q2 = st.text_area("2. What architecture patterns did we process?", value=existing_j['q2'] if existing_j else "")
-            q3 = st.text_area("3. What are we avoiding in the codebase?", value=existing_j['q3'] if existing_j else "")
+            q1 = st.text_area("১. আজকে কোডিং বা টেকনিক্যাল কোন জটিল সমস্যার সমাধান করলেন?", value=existing_j['q1'] if existing_j else "")
+            q2 = st.text_area("২. নতুন কোন কোড আর্কিটেকচার বা ক্লিন প্যাটার্ন আজ শিখলেন বা অ্যাপ্লাই করলেন?", value=existing_j['q2'] if existing_j else "")
+            q3 = st.text_area("৩. নিজের কোডবেস বা ক্যারিয়ারের কোন কঠিন কাজটা আপনি এড়িয়ে যাওয়ার চেষ্টা করছেন?", value=existing_j['q3'] if existing_j else "")
             
             col_m, col_e = st.columns(2)
             with col_m:
-                mood = st.slider("Mood Tuning (1-10)", 1, 10, int(existing_j['mood']) if existing_j and existing_j['mood'] else 5)
+                mood = st.slider("আজকের মেজাজ বা মানসিক অবস্থা (Mood: 1-10)", 1, 10, int(existing_j['mood']) if existing_j and existing_j['mood'] else 5)
             with col_e:
-                energy = st.slider("Energy Configuration (1-10)", 1, 10, int(existing_j['energy']) if existing_j and existing_j['energy'] else 5)
+                energy = st.slider("আজকের এনার্জি বা কর্মক্ষমতা (Energy: 1-10)", 1, 10, int(existing_j['energy']) if existing_j and existing_j['energy'] else 5)
                 
-            if st.form_submit_button("Commit Reflection Entry"):
+            if st.form_submit_button("চিন্তাগুলো সেভ করুন (Commit Entry)"):
                 with get_db_connection() as conn:
                     conn.execute("""
                         INSERT INTO journal_entries (user_id, date, q1, q2, q3, mood, energy) 
@@ -281,16 +353,16 @@ elif menu == "Routine Tracker":
                         ON CONFLICT(date) DO UPDATE SET q1=excluded.q1, q2=excluded.q2, q3=excluded.q3, mood=excluded.mood, energy=excluded.energy
                     """, (user_id, today, q1, q2, q3, mood, energy))
                     conn.commit()
-                st.success("Reflection array committed.")
+                st.success("আজকের রিফ্লেকশন ডাটাবেজে যুক্ত হয়েছে।")
                 
     with tab3:
-        st.subheader("Async Garbage Collection (Brain Dump)")
+        st.subheader("মানসিক লোড কমানোর ক্যাশ মেমোরি (Brain Dump)")
         with get_db_connection() as conn:
             existing_bd = conn.execute("SELECT brain_dump FROM journal_entries WHERE user_id = ? AND date = ?", (user_id, today)).fetchone()
             
-        bd_text = st.text_area("Unload mental processing threads here:", 
+        bd_text = st.text_area("কাজের মাঝে মাথায় আসা যেকোনো এলোমেলো চিন্তা বা আইডিয়া এখানে লিখে মাথা হালকা করুন (যাতে ফোকাস নষ্ট না হয়):", 
                                value=existing_bd['brain_dump'] if (existing_bd and existing_bd['brain_dump']) else "", height=250)
-        if st.button("Flush Cache to Storage"):
+        if st.button("মেমোরি ফ্লাশ করুন (Save Storage)"):
             with get_db_connection() as conn:
                 conn.execute("""
                     INSERT INTO journal_entries (user_id, date, brain_dump) 
@@ -298,54 +370,53 @@ elif menu == "Routine Tracker":
                     ON CONFLICT(date) DO UPDATE SET brain_dump=excluded.brain_dump
                 """, (user_id, today, bd_text))
                 conn.commit()
-            st.success("Thread flushed.")
+            st.success("মানসিক ট্র্যাকিং সেভ করা হয়েছে।")
 
 # --- MODULE 3: GOAL ARCHITECTURE ---
-elif menu == "Goal Architecture":
-    st.title("🎯 Structural Pipeline Goals")
+elif menu == "লক্ষ্য নির্ধারণ (Goal Architecture)":
+    st.title("🎯 লং-টার্ম গোল ও মিশন কন্ট্রোল")
     col_g1, col_g2 = st.columns([1, 2])
     
     with col_g1:
-        st.subheader("Inject New Goal")
+        st.subheader("নতুন মিশন সেট করুন")
         with st.form("new_goal_form"):
-            title = st.text_input("Goal Title")
-            category = st.selectbox("Category", ["Coding", "Finance", "Health", "Learning", "Social"])
-            timeframe = st.selectbox("Timeframe", ["Daily", "Weekly", "Monthly", "Yearly"])
-            deadline = st.date_input("Deadline")
-            if st.form_submit_button("Compile Goal") and title:
+            title = st.text_input("লক্ষ্য বা টার্গেটের নাম")
+            category = st.selectbox("ক্যাটাগরি", ["Coding", "Finance", "Health", "Learning", "Social"])
+            timeframe = st.selectbox("সময়সীমার ধরন", ["Daily", "Weekly", "Monthly", "Yearly"])
+            deadline = st.date_input("ডেডলাইন বা শেষ সময়")
+            if st.form_submit_button("মিশন চালু করুন") and title:
                 with get_db_connection() as conn:
                     conn.execute("INSERT INTO goals (user_id, title, category, timeframe, progress, deadline) VALUES (?, ?, ?, ?, 0, ?)",
                                  (user_id, title, category, timeframe, deadline.strftime("%Y-%m-%d")))
                     conn.commit()
-                st.success("Goal stacked.")
+                st.success("নতুন গোল পাইপলাইনে যুক্ত হয়েছে।")
                 st.rerun()
 
     with col_g2:
-        st.subheader("Active Objectives")
+        st.subheader("সক্রিয় লক্ষ্যসমূহ")
         with get_db_connection() as conn:
             goals = conn.execute("SELECT * FROM goals WHERE user_id = ?", (user_id,)).fetchall()
         if not goals:
-            st.info("No active goals.")
+            st.info("বর্তমানে কোনো সক্রিয় দীর্ঘমেয়াদী লক্ষ্য নেই।")
         else:
             for g in goals:
                 with st.expander(f"[{g['category']}] {g['title']} - {g['timeframe']}"):
-                    prog = st.slider("Progress (%)", 0, 100, int(g['progress']), key=f"prog_{g['id']}")
+                    prog = st.slider("কাজের অগ্রগতি (%)", 0, 100, int(g['progress']), key=f"prog_{g['id']}")
                     if prog != g['progress']:
                         with get_db_connection() as conn:
                             conn.execute("UPDATE goals SET progress = ? WHERE id = ?", (prog, g['id']))
                             conn.commit()
                         st.rerun()
-                    if st.button("Delete Goal", key=f"del_{g['id']}"):
+                    if st.button("মিশন ডিলিট করুন", key=f"del_{g['id']}"):
                         with get_db_connection() as conn:
                             conn.execute("DELETE FROM goals WHERE id = ?", (g['id'],))
                             conn.commit()
                         st.rerun()
 
 # --- MODULE 4: ADVANCED REPORTS & ANALYTICS ---
-elif menu == "Advanced Reports & Analytics":
-    st.title("📅 Time-Series Analytics & Reports")
+elif menu == "রিপোর্ট ও বোঝাপড়া (Advanced Reports)":
+    st.title("📅 সময়ের সাথে কাজের প্রোগ্রেস ও রিপোর্ট")
     
-    # 1. Fetch raw data from database
     with get_db_connection() as conn:
         log_df = pd.read_sql_query("""
             SELECT hl.date, hl.completed, h.name as habit_name, h.category
@@ -359,81 +430,73 @@ elif menu == "Advanced Reports & Analytics":
         """, conn, params=(user_id,))
 
     if log_df.empty:
-        st.warning("Not enough data yet. Complete routines to generate analysis reports.")
+        st.warning("রিপোর্ট জেনারেট করার জন্য এখনো পর্যাপ্ত ডাটা নেই। কিছুদিন রুটিন ট্র্যাক করুন।")
     else:
-        # 2. Setup Timeframe Logic
-        st.write("Select how you want to aggregate and view your data:")
+        st.write("আপনার কাজের অগ্রগতির ফ্রিকোয়েন্সি সিলেক্ট করুন:")
         timeframe_option = st.selectbox(
-            "Report Frequency", 
-            ["Daily", "Weekly", "Monthly", "Quarterly", "Half-Yearly", "Yearly"]
+            "রিপোর্টের সময়সীমা নির্বাচন করুন", 
+            ["Daily (দৈনিক)", "Weekly (সাপ্তাহিক)", "Monthly (মাসিক)", "Quarterly (ত্রৈমাসিক)", "Half-Yearly (ষাণ্মাসিক)", "Yearly (বার্ষিক)"]
         )
         
         # Mapping timeframe selection to Pandas Frequency Strings
+        clean_option = timeframe_option.split(" ")[0]
         freq_mapping = {
             "Daily": "D",
-            "Weekly": "W-MON", # Week starts on Monday
-            "Monthly": "ME",   # Month End
-            "Quarterly": "QE", # Quarter End
-            "Half-Yearly": "2QE", # 2 Quarters = Half Year
-            "Yearly": "YE"     # Year End
+            "Weekly": "W-MON", 
+            "Monthly": "ME",   
+            "Quarterly": "QE", 
+            "Half-Yearly": "2QE", 
+            "Yearly": "YE"     
         }
-        pd_freq = freq_mapping[timeframe_option]
+        pd_freq = freq_mapping[clean_option]
 
-        # Convert date columns to actual pandas DateTime objects
         log_df['date'] = pd.to_datetime(log_df['date'])
         
-        # 3. Process Habit Data grouped by the selected timeframe
-        # Group by the chosen timeframe to calculate completion rates
+        # Time aggregation processing
         time_grouped = log_df.groupby(pd.Grouper(key='date', freq=pd_freq)).agg(
             total_tasks=('completed', 'count'),
             completed_tasks=('completed', 'sum')
         ).reset_index()
         
-        # Calculate completion percentage for that period
         time_grouped['completion_rate'] = (time_grouped['completed_tasks'] / time_grouped['total_tasks']) * 100
-        # Format date for clean display
         time_grouped['period'] = time_grouped['date'].dt.strftime('%Y-%m-%d')
         
-        st.markdown(f"### 📈 {timeframe_option} Consistency Report")
+        st.markdown(f"### 📈 {clean_option} ধারাবাহিকতা রিপোর্ট")
         
-        # Plotly Bar Chart showing completion over time
+        # Chart 1: Core Habit Metric Chart
         fig_time = px.bar(
             time_grouped, x='period', y='completion_rate', 
             text='completion_rate',
-            labels={'period': 'Time Period', 'completion_rate': 'Success Rate (%)'},
-            title=f"Habit Completion Trends ({timeframe_option})", 
-            template="plotly_dark", color='completion_rate', color_continuous_scale="Viridis"
+            labels={'period': 'সময়কাল', 'completion_rate': 'সাফল্যের হার (%)'},
+            title=f"রুটিন সফলতার গ্রাফ ({clean_option})", 
+            template="plotly_dark", color='completion_rate', color_continuous_scale="Teal"
         )
         fig_time.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
         st.plotly_chart(fig_time, use_container_width=True)
 
-        # 4. Data Table Report (Exportable)
-        st.write(f"**Detailed {timeframe_option} Data Table:**")
+        # Detailed Grid Data
+        st.write(f"**{clean_option} বিস্তারিত ডাটা টেবিল (এখান থেকে ডাউনলোড করতে পারবেন):**")
         st.dataframe(time_grouped[['period', 'total_tasks', 'completed_tasks', 'completion_rate']].style.format({'completion_rate': "{:.2f}%"}), use_container_width=True)
 
         st.markdown("---")
         
-        # 5. Process Mood & Energy by Timeframe
+        # Chart 2: Mood and Energy Tracking over selective periods
         if not journal_df.empty and not journal_df['mood'].isna().all():
-            st.subheader(f"🧠 {timeframe_option} Mood & Energy Averages")
+            st.subheader(f"🧠 {clean_option} মেজাজ ও শক্তির গড় গ্রাফ (Bio-Trends)")
             journal_df['date'] = pd.to_datetime(journal_df['date'])
-            # Convert columns to numeric, forcing errors to NaN
             journal_df['mood'] = pd.to_numeric(journal_df['mood'], errors='coerce')
             journal_df['energy'] = pd.to_numeric(journal_df['energy'], errors='coerce')
             
-            # Group by timeframe
             journal_grouped = journal_df.groupby(pd.Grouper(key='date', freq=pd_freq))[['mood', 'energy']].mean().reset_index()
             journal_grouped['period'] = journal_grouped['date'].dt.strftime('%Y-%m-%d')
-            
-            # Remove empty rows
             journal_grouped = journal_grouped.dropna(subset=['mood', 'energy'])
             
             if not journal_grouped.empty:
                 fig_bio = px.line(
                     journal_grouped, x='period', y=['mood', 'energy'], markers=True,
-                    labels={'value': 'Average Score (1-10)', 'period': 'Time Period'},
-                    title=f"Biometric Trends ({timeframe_option} Average)", template="plotly_dark"
+                    labels={'value': 'গড় স্কোর (1-10)', 'period': 'সময়কাল'},
+                    title=f"মানসিক অবস্থা ও কাজের শক্তির ট্রেন্ডস ({clean_option} Average)", template="plotly_dark"
                 )
                 st.plotly_chart(fig_bio, use_container_width=True)
             else:
-                st.info("Fill out your daily mood/energy sliders in the 'Routine Tracker' to see biometric trends here.")
+                st.info("আপনার দৈনিক মানসিক অবস্থা ট্র্যাক করার জন্য রুটিন ট্র্যাকারের 'আজকের আত্মচিন্তন' ট্যাবটি নিয়মিত পূরণ করুন।")
