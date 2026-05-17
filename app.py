@@ -300,25 +300,36 @@ def make_hash(pw):
 
 DEFAULT_HABITS = [
     # (name, category, slot)
-    ("Wake up — No phone for 30 min",                   "Mental",  "Morning"),
-    ("10-min breathing / meditation",                    "Mental",  "Morning"),
-    ("Morning movement — 15 min light exercise",         "Health",  "Morning"),
-    ("Deep Learning Block — 60 min focused study",       "Coding",  "Morning"),
-    ("High-protein breakfast — no screen",               "Health",  "Morning"),
-    ("Plan the day — write your MIT",                    "Mental",  "Morning"),
-    ("Deep Work Block 1 — hard coding / logic",          "Coding",  "Work"),
-    ("Reactive tasks — email, messages, PR reviews",     "Coding",  "Work"),
-    ("Lunch away from screen + short walk",              "Health",  "Work"),
-    ("Personal project / build something real",          "Coding",  "Work"),
-    ("Shutdown ritual — commit code, write tomorrow plan","Mental", "Work"),
-    ("Strength training / gym session",                  "Health",  "Fitness"),
-    ("Walk 30+ min",                                     "Health",  "Fitness"),
-    ("Wrist & posture stretch",                          "Health",  "Fitness"),
-    ("Read technical book — 30 min",                     "Coding",  "Learning"),
-    ("Write or post about what you learned",             "Coding",  "Learning"),
-    ("Screens off by 9 PM — Digital Sunset",             "Mental",  "Night"),
-    ("Night reflection — 3 questions",                   "Mental",  "Night"),
-    ("In bed by 10:15 PM",                               "Health",  "Night"),
+    # 🌅 Morning Routine — সকালের রুটিন
+    ("No Phone First 30 Mins — ঘুম থেকে উঠে প্রথম ৩০ মিনিট ফোন না ধরা", "Mental", "Morning"),
+    ("10 Min Stillness/Breathing — ১০ মিনিট চুপচাপ বসা বা প্রাণায়াম/Breathing", "Mental", "Morning"),
+    ("Read 10 Verses of Quran — প্রতিদিন ১০ টি আয়াত কুরআন পাঠ", "Mental", "Morning"),  # <-- এখানে যুক্ত করা হয়েছে
+    ("Physical Activation (15m) — শরীর সচল করা (১৫ মিনিট হালকা ব্যায়াম)", "Health", "Morning"),
+    ("Deep Learning Block (60m) — গভীর মনোযোগ দিয়ে নতুন কিছু শেখা (১ ঘণ্টা)", "Coding", "Morning"),
+    ("High-Protein Screenless Breakfast — স্ক্রিন ছাড়া পুষ্টিকর নাস্তা খাওয়া", "Health", "Morning"),
+    ("Plan the day — write your MIT — দিনের পরিকল্পনা ও প্রধান কাজ নির্ধারণ", "Mental", "Morning"),
+
+    # 💻 Work Routine — কাজের রুটিন
+    ("Deep Work Block 1 (Hard Code) — কঠিন কোডিং ও লজিক সমাধান", "Coding", "Work"),
+    ("Reactive Tasks Window — ইমেইল, মেসেজ ও কোড রিভিউ চেক করার সময়", "Coding", "Work"),
+    ("Disconnect & Walk Lunch — মোবাইল-ল্যাপটপ ছাড়া দুপুরের খাবার ও হাঁটা", "Health", "Work"),
+    ("Project / Build Time — পার্সোনাল প্রজেক্ট বা নতুন কিছু বিল্ড করার সময়", "Coding", "Work"),
+    ("Shutdown Ritual executed — দিনের কাজ শেষ করার রিল্যাক্সিং রুটিন", "Mental", "Work"),
+
+    # 💪 Fitness Routine — শারীরিক ব্যায়াম
+    ("Post-Work Decompression Walk — কাজ শেষে মাথা ফ্রেশ করার জন্য হাঁটা", "Health", "Fitness"),
+    ("Posterior Chain / Strength Training — পিঠ, কোমর ও শারীরিক শক্তির ব্যায়াম", "Health", "Fitness"),
+    ("Wrist & posture stretch — কব্জি এবং বসার ভঙ্গি বা পোস্টার স্ট্রেচিং", "Health", "Fitness"),
+
+    # 📖 Learning — পড়ালেখা
+    ("Read 5 pages of a book — প্রতিদিন ৫ পৃষ্ঠা বই পাঠ", "Mental", "Learning"),  # <-- এখানে যুক্ত করা হয়েছে
+    ("Read technical book — 30 min — টেকনিক্যাল বই পড়া (৩০ মিনিট)", "Coding", "Learning"),
+    ("Write or post about what you learned — যা শিখলেন তা নিয়ে পোস্ট করা", "Coding", "Learning"),
+
+    # 🌙 Night Routine — রাতের রুটিন
+    ("Digital Sunset @ 9:00 PM — রাত ৯:০০ টায় সব ডিভাইস/স্ক্রিন বন্ধ করা", "Mental", "Night"),
+    ("Night reflection — 3 questions — রাতের আত্মচিন্তন (৩টি প্রশ্ন)", "Mental", "Night"),
+    ("In bed by 10:15 PM — রাত ১০:১৫ এর মধ্যে বিছানায় যাওয়া", "Health", "Night"),
 ]
 
 def seed_habits(uid):
