@@ -284,6 +284,12 @@ def init_db():
         if "slot" not in habit_columns:
             db.execute("ALTER TABLE habits ADD COLUMN slot TEXT DEFAULT 'Morning'")
 
+        # Patch the 'goals' table if it's missing the 'status' column (Fixes your current error)
+        cursor.execute("PRAGMA table_info(goals)")
+        goal_columns = [row[1] for row in cursor.fetchall()]
+        if "status" not in goal_columns:
+            db.execute("ALTER TABLE goals ADD COLUMN status TEXT DEFAULT 'active'")
+
 init_db()
 
 # ──────────────────────────────────────────────────────────────
