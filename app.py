@@ -27,7 +27,7 @@ st.markdown("""
         width: 100%;
     }
 </style>
-""", unsafe_with_html=True)
+""", unsafe_allow_html=True) # <-- Changed here
 
 # --- DATABASE SETUP & ARCHITECTURE ---
 DB_FILE = "devlife_os.db"
