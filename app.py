@@ -1139,12 +1139,13 @@ def page_reviews():
     st.markdown("## 📊 Progress Reviews")
     t1, t2, t3 = st.tabs(["📅  Weekly", "🗓️  Monthly", "🏆  Yearly"])
 
-    def render_review(days, label):
+def render_review(days, label):
         hmap     = get_heatmap_df(uid, days)
         metrics  = get_metrics_df(uid, days)
         jdf      = get_journal_df(uid, days)
-        wr = comp_rate(uid, days) # assignment expressions handle connections safely inside blocks
-            wr = comp_rate(uid, days)
+        
+        wr       = comp_rate(uid, days)  # <-- এই লাইনটির বাড়তি স্পেস কমিয়ে বামে আনুন
+        
         adw      = metrics["deep_work_hrs"].mean() if not metrics.empty else 0
         asl      = metrics["sleep_hrs"].mean()     if not metrics.empty else 0
         aex      = metrics["exercise_mins"].mean()  if not metrics.empty else 0
