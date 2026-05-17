@@ -266,6 +266,23 @@ def init_db():
             UNIQUE(user_id, skill, month, year)
         );
         """)
+        
+        # ── AUTOMATIC MIGRATIONS FOR OLD DATABASES ──
+        cursor = db.cursor()
+        
+        # Patch the 'users' table if it's missing columns from an old run
+        cursor.execute("PRAGMA table_info(users)")
+        user_columns = [row[1] for row in cursor.fetchall()]
+        if "role" not in user_columns:
+            db.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'Developer'")
+        if "stack" not in user_columns:
+            db.execute("ALTER TABLE users ADD COLUMN stack TEXT DEFAULT 'React / PHP / Python'")
+            
+        # Patch the 'habits' table if it's missing the 'slot' column
+        cursor.execute("PRAGMA table_info(habits)")
+        habit_columns = [row[1] for row in cursor.fetchall()]
+        if "slot" not in habit_columns:
+            db.execute("ALTER TABLE habits ADD COLUMN slot TEXT DEFAULT 'Morning'")
 
 init_db()
 
