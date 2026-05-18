@@ -207,27 +207,6 @@ hr { border-color: #1a2540 !important; }
 button[data-testid="collapsedControl"],
 button[kind="header"] { display: none !important; }
 
-/* ── Sidebar toggle button styling ── */
-div[data-testid="stButton"]:has(button[data-testid="sidebar_toggle_btn"]) > button,
-button[data-testid="sidebar_toggle_btn"] {
-    background: #0d1627 !important;
-    border: 1.5px solid #38bdf8 !important;
-    color: #38bdf8 !important;
-    border-radius: 9px !important;
-    font-size: 1.1rem !important;
-    font-weight: 700 !important;
-    width: 40px !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    padding: 0 !important;
-    box-shadow: 0 2px 14px rgba(56,189,248,.28) !important;
-}
-button[data-testid="sidebar_toggle_btn"]:hover {
-    background: #38bdf8 !important;
-    color: #080c14 !important;
-    box-shadow: 0 0 18px rgba(56,189,248,.5) !important;
-}
-
 /* ── Admin badge ── */
 .admin-badge {
     display: inline-block;
@@ -409,7 +388,8 @@ def t(key):
 # ──────────────────────────────────────────────────────────────
 #  DATABASE
 # ──────────────────────────────────────────────────────────────
-DB_FILE = "devlife_os.db"
+# Use absolute path so DB persists regardless of working directory
+DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "devlife_os.db")
 
 def conn():
     c = sqlite3.connect(DB_FILE, check_same_thread=False)
@@ -955,7 +935,7 @@ def render_sidebar():
     pct   = done / total * 100 if total else 0
     bar_color = "#34d399" if pct >= 75 else "#fbbf24" if pct >= 40 else "#f87171"
 
-    # Check admin status
+    # ── Admin check ──
     with conn() as db:
         u = db.execute("SELECT is_admin FROM users WHERE id=?", (uid,)).fetchone()
     is_admin_user = bool(u and u["is_admin"])
@@ -965,33 +945,17 @@ def render_sidebar():
     if "sidebar_open" not in st.session_state:
         st.session_state.sidebar_open = True
 
-    # ── Toggle button (fixed top-left, always visible) ──
-    # We inject it via CSS+HTML so it's truly position:fixed above everything
-    toggle_icon = "✕" if st.session_state.sidebar_open else "☰"
-    toggle_title = "Hide Sidebar" if st.session_state.sidebar_open else "Show Sidebar"
-    # ── Toggle button rendered as a small column at the top ──
-    toggle_col = st.columns([0.045, 0.955])
-    with toggle_col[0]:
-        if st.button(toggle_icon, key="sidebar_toggle_btn", help=toggle_title):
+    # ── ALWAYS render the full sidebar (nav is always present in DOM) ──
+    # We show/hide it via CSS only, so the selected radio value is always available.
+    with st.sidebar:
+        # Toggle button at the very top of sidebar
+        tog_label = "◀  Hide Sidebar" if st.session_state.sidebar_open else "▶  Show Sidebar"
+        if st.button(tog_label, key="sidebar_toggle_btn", use_container_width=True):
             st.session_state.sidebar_open = not st.session_state.sidebar_open
             st.rerun()
 
-    # ── Apply sidebar visibility via CSS ──
-    if not st.session_state.sidebar_open:
-        st.markdown("""
-        <style>
-        section[data-testid="stSidebar"] { display: none !important; }
-        /* Expand main content when sidebar is hidden */
-        .block-container { max-width: 98% !important; padding-left: 1rem !important; padding-right: 1rem !important; }
-        </style>
-        """, unsafe_allow_html=True)
-        # Return a default page when sidebar is hidden (keep last selected)
-        return st.session_state.get("last_page", "🏠  Dashboard")
-
-    # ── Render sidebar only when open ──
-    with st.sidebar:
         st.markdown(f"""
-        <div style="padding:16px 0 10px;text-align:center">
+        <div style="padding:10px 0 8px;text-align:center">
             <div style="font-size:2rem;margin-bottom:4px">⚡</div>
             <div class="logo-text">DevLife OS</div>
             <div class="logo-sub">Developer Success System</div>
@@ -1000,7 +964,7 @@ def render_sidebar():
 
         st.markdown(f"""
         <div style="background:#111c30;border:1px solid #1e2d48;border-radius:10px;
-                    padding:12px 14px;margin:10px 0 6px">
+                    padding:12px 14px;margin:8px 0 6px">
             <div style="font-size:.9rem;font-weight:700;color:#dce7f3">👤 {uname}</div>
             <div style="font-size:.73rem;color:#475569;margin-top:2px">
                 {st.session_state.role} · {st.session_state.stack[:30]}
@@ -1020,18 +984,19 @@ def render_sidebar():
         """, unsafe_allow_html=True)
 
         st.markdown("---")
-        # ── Language toggle
-        if "lang" not in st.session_state:
-            st.session_state.lang = "en"
+
+        # ── Language toggle ──
         lang_choice = st.radio(
             "🌐 Language / ভাষা",
             ["English", "বাংলা"],
-            index=0 if st.session_state.lang == "en" else 1,
+            index=0 if st.session_state.get("lang","en") == "en" else 1,
             horizontal=True,
             key="lang_radio",
         )
         st.session_state.lang = "en" if lang_choice == "English" else "bn"
         st.markdown("---")
+
+        # ── Navigation ──
         nav_items = [
             t("nav_dashboard"),
             t("nav_daily"),
@@ -1046,10 +1011,10 @@ def render_sidebar():
             nav_items.append(t("nav_admin"))
 
         selected = st.radio("Navigate", nav_items, label_visibility="collapsed")
-        st.session_state.last_page = selected  # remember last page
+        st.session_state.last_page = selected
         st.markdown("---")
 
-        # Mini quote in sidebar
+        # ── Mini quote ──
         qt, qa, _ = random_quote_by_cat("Mindset")
         st.markdown(f"""
         <div style="background:#111c30;border:1px solid #1e2d48;border-radius:8px;
@@ -1060,12 +1025,36 @@ def render_sidebar():
         """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button(t("logout"), use_container_width=True):
-            for k in ["logged_in","user_id","username","role","stack"]:
+        if st.button(t("logout"), use_container_width=True, key="logout_btn"):
+            for k in ["logged_in","user_id","username","role","stack","sidebar_open","last_page"]:
                 st.session_state.pop(k, None)
             st.rerun()
 
-    return selected.strip()  # return full label for keyword matching
+    # ── CSS: hide the sidebar panel when closed, keep it in DOM ──
+    if not st.session_state.sidebar_open:
+        st.markdown("""
+        <style>
+        section[data-testid="stSidebar"] {
+            visibility: hidden !important;
+            width: 0px !important;
+            min-width: 0px !important;
+            flex: none !important;
+        }
+        /* Let main content fill the full width */
+        [data-testid="stSidebarUserContent"] { display: none !important; }
+        </style>
+        """, unsafe_allow_html=True)
+    else:
+        # Make sure it's fully visible when open
+        st.markdown("""
+        <style>
+        section[data-testid="stSidebar"] {
+            visibility: visible !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    return selected.strip()
 
 
 # ──────────────────────────────────────────────────────────────
@@ -1935,10 +1924,14 @@ PAGES = {
 }
 
 def main():
-    # Init session state
-    for k, v in [("logged_in", False), ("user_id", None), ("username", ""),
-                 ("role", "Developer"), ("stack", "React/PHP/Python"), ("lang", "en"),
-                 ("is_admin", False), ("sidebar_open", True), ("last_page", "")]:
+    # Init session state defaults
+    defaults = [
+        ("logged_in", False), ("user_id", None), ("username", ""),
+        ("role", "Developer"), ("stack", "React/PHP/Python"), ("lang", "en"),
+        ("is_admin", False), ("sidebar_open", True),
+        ("last_page", "🏠  Dashboard"),
+    ]
+    for k, v in defaults:
         if k not in st.session_state:
             st.session_state[k] = v
 
@@ -1946,8 +1939,9 @@ def main():
         page_auth()
         return
 
-    selected = render_sidebar()  # returns nav label or last_page when sidebar hidden
-    # Map translated labels back to page keys robustly via icon/keyword
+    selected = render_sidebar()  # always returns the currently selected nav label
+
+    # Map nav label → page key via keyword matching (works for EN + BN)
     PAGE_KEYWORDS = {
         "Dashboard":        ["dashboard", "ড্যাশবোর্ড"],
         "Daily Routine":    ["daily", "routine", "দৈনন্দিন", "রুটিন"],
@@ -1959,7 +1953,7 @@ def main():
         "Profile":          ["profile", "প্রোফাইল"],
         "Admin":            ["admin", "অ্যাডমিন"],
     }
-    sel_lower = selected.lower() if selected else ""
+    sel_lower = (selected or "").lower()
     matched = "Dashboard"
     for page, keywords in PAGE_KEYWORDS.items():
         if any(kw in sel_lower for kw in keywords):
