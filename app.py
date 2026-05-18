@@ -202,7 +202,89 @@ hr { border-color: #1a2540 !important; }
 
 /* ── hide streamlit default header ── */
 #MainMenu, footer, header { visibility: hidden; }
+
+/* ── Sidebar Toggle Button ── */
+#sidebar-toggle-btn {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 99999;
+    background: #0d1627;
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 12px rgba(56,189,248,.25);
+    transition: background .2s, color .2s, box-shadow .2s;
+}
+#sidebar-toggle-btn:hover {
+    background: #38bdf8;
+    color: #080c14;
+    box-shadow: 0 0 18px rgba(56,189,248,.45);
+}
+
+/* ── Sidebar hidden state ── */
+body.sidebar-hidden section[data-testid="stSidebar"] {
+    display: none !important;
+}
+body.sidebar-hidden .main .block-container {
+    max-width: 100% !important;
+    padding-left: 4rem !important;
+}
+
+/* ── Admin badge ── */
+.admin-badge {
+    display: inline-block;
+    background: linear-gradient(90deg, #f87171, #fbbf24);
+    color: #080c14;
+    font-size: .6rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 1px 7px;
+    border-radius: 99px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* ── Admin panel ── */
+.admin-card {
+    background: linear-gradient(135deg, #1a0d0d 0%, #0f0808 100%);
+    border: 1px solid #4a1a1a;
+    border-left: 4px solid #f87171;
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 18px;
+}
 </style>
+""", unsafe_allow_html=True)
+
+# ── Sidebar Toggle Floating Button (injected once per session) ──
+st.markdown("""
+<button id="sidebar-toggle-btn" title="Toggle Sidebar">☰</button>
+<script>
+(function() {
+    const btn = document.getElementById('sidebar-toggle-btn');
+    if (!btn) return;
+    let hidden = false;
+    btn.addEventListener('click', function() {
+        hidden = !hidden;
+        document.body.classList.toggle('sidebar-hidden', hidden);
+        btn.innerHTML = hidden ? '&#9776;' : '&#9776;';
+        btn.style.left = hidden ? '14px' : '14px';
+        btn.title = hidden ? 'Show Sidebar' : 'Hide Sidebar';
+        btn.innerHTML = hidden ? '&#9776;' : '&#10005;';
+    });
+    // Start with X (sidebar visible)
+    btn.innerHTML = '&#10005;';
+})();
+</script>
 """, unsafe_allow_html=True)
 
 
@@ -235,6 +317,7 @@ TRANSLATIONS = {
     "nav_skills":        {"en": "📚  Skills & Roadmap",   "bn": "📚  দক্ষতা ও রোডম্যাপ"},
     "nav_finance":       {"en": "💰  Finance Tips",       "bn": "💰  আর্থিক টিপস"},
     "nav_profile":       {"en": "👤  Profile",            "bn": "👤  প্রোফাইল"},
+    "nav_admin":         {"en": "🛡️  Admin Panel",        "bn": "🛡️  অ্যাডমিন প্যানেল"},
     "logout":            {"en": "🚪  Logout",             "bn": "🚪  লগআউট"},
     "today":             {"en": "Today",                   "bn": "আজ"},
     # Dashboard
@@ -434,6 +517,17 @@ def init_db():
         try:
             db.execute("ALTER TABLE goals ADD COLUMN status TEXT DEFAULT 'active'")
         except sqlite3.OperationalError:
+            pass
+
+        try:
+            db.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+
+        # Auto-promote user named 'admin' to admin
+        try:
+            db.execute("UPDATE users SET is_admin=1 WHERE username='admin'")
+        except Exception:
             pass
 
 init_db()
@@ -891,6 +985,12 @@ def render_sidebar():
     pct   = done / total * 100 if total else 0
     bar_color = "#34d399" if pct >= 75 else "#fbbf24" if pct >= 40 else "#f87171"
 
+    # Check admin status
+    with conn() as db:
+        u = db.execute("SELECT is_admin FROM users WHERE id=?", (uid,)).fetchone()
+    is_admin_user = bool(u and u["is_admin"])
+    st.session_state.is_admin = is_admin_user
+
     with st.sidebar:
         st.markdown(f"""
         <div style="padding:16px 0 10px;text-align:center">
@@ -934,7 +1034,7 @@ def render_sidebar():
         )
         st.session_state.lang = "en" if lang_choice == "English" else "bn"
         st.markdown("---")
-        selected = st.radio("Navigate", [
+        nav_items = [
             t("nav_dashboard"),
             t("nav_daily"),
             t("nav_goals"),
@@ -943,7 +1043,11 @@ def render_sidebar():
             t("nav_skills"),
             t("nav_finance"),
             t("nav_profile"),
-        ], label_visibility="collapsed")
+        ]
+        if is_admin_user:
+            nav_items.append(t("nav_admin"))
+
+        selected = st.radio("Navigate", nav_items, label_visibility="collapsed")
         st.markdown("---")
 
         # Mini quote in sidebar
@@ -1659,6 +1763,163 @@ def page_profile():
         </div>""", unsafe_allow_html=True)
 
 
+
+
+# ──────────────────────────────────────────────────────────────
+#  PAGE: ADMIN PANEL
+# ──────────────────────────────────────────────────────────────
+def page_admin():
+    if not st.session_state.get("is_admin"):
+        st.error("⛔ Access denied. Admins only.")
+        return
+
+    st.markdown("## 🛡️ Admin Panel")
+    st.markdown("""<div class="admin-card">
+        <b style="color:#f87171;font-size:1.05rem">⚠️ Administrator Zone</b><br>
+        <span style="color:#94a3b8;font-size:.85rem">
+            Manage users carefully. Deleted users and all their data are permanently removed.
+        </span>
+    </div>""", unsafe_allow_html=True)
+
+    # ── Load all users ──
+    with conn() as db:
+        users = db.execute(
+            "SELECT id, username, role, stack, created_at, is_admin FROM users ORDER BY created_at DESC"
+        ).fetchall()
+
+    if not users:
+        st.info("No users found.")
+        return
+
+    current_uid = st.session_state.user_id
+
+    # ── Stats ──
+    c1, c2, c3 = st.columns(3)
+    c1.markdown(f"""<div style="background:#0d1627;border:1px solid #1e2d48;border-radius:12px;
+        padding:18px 16px;text-align:center">
+        <div style="font-size:2rem;font-weight:800;color:#38bdf8">{len(users)}</div>
+        <div style="font-size:.72rem;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-top:4px">Total Users</div>
+    </div>""", unsafe_allow_html=True)
+    admin_count = sum(1 for u in users if u["is_admin"])
+    c2.markdown(f"""<div style="background:#0d1627;border:1px solid #1e2d48;border-radius:12px;
+        padding:18px 16px;text-align:center">
+        <div style="font-size:2rem;font-weight:800;color:#f87171">{admin_count}</div>
+        <div style="font-size:.72rem;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-top:4px">Admins</div>
+    </div>""", unsafe_allow_html=True)
+    c3.markdown(f"""<div style="background:#0d1627;border:1px solid #1e2d48;border-radius:12px;
+        padding:18px 16px;text-align:center">
+        <div style="font-size:2rem;font-weight:800;color:#34d399">{len(users) - admin_count}</div>
+        <div style="font-size:.72rem;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-top:4px">Regular Users</div>
+    </div>""", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Tabs ──
+    tab_users, tab_delete = st.tabs(["👥  All Users", "🗑️  Delete Users"])
+
+    with tab_users:
+        st.markdown('<div class="sec-header">Registered Users</div>', unsafe_allow_html=True)
+        for u in users:
+            badge = '<span class="admin-badge">ADMIN</span>' if u["is_admin"] else ""
+            you   = " <span style='color:#34d399;font-size:.7rem'>(you)</span>" if u["id"] == current_uid else ""
+            st.markdown(f"""
+            <div style="background:#0d1627;border:1px solid #1e2d48;border-radius:10px;
+                        padding:12px 16px;margin:5px 0;display:flex;align-items:center;gap:10px">
+                <div style="font-size:1.4rem">👤</div>
+                <div style="flex:1">
+                    <div style="font-weight:700;color:#dce7f3">
+                        @{u['username']}{badge}{you}
+                    </div>
+                    <div style="font-size:.75rem;color:#475569;margin-top:2px">
+                        {u['role']} &nbsp;·&nbsp; Stack: {(u['stack'] or '')[:40]}
+                        &nbsp;·&nbsp; Joined: {u['created_at']}
+                    </div>
+                </div>
+            </div>""", unsafe_allow_html=True)
+
+    with tab_delete:
+        st.markdown('<div class="sec-header">Delete Users</div>', unsafe_allow_html=True)
+        st.warning("⚠️ Deleting a user permanently removes their account, habits, goals, journal entries, and all data.", icon="⚠️")
+
+        # Filter out self and other admins for safety
+        deletable = [u for u in users if u["id"] != current_uid and not u["is_admin"]]
+        admin_only = [u for u in users if u["id"] != current_uid and u["is_admin"]]
+
+        if not deletable:
+            st.info("No regular users available to delete.")
+        else:
+            user_options = {f"@{u['username']}  ({u['role']}) — joined {u['created_at']}": u["id"] for u in deletable}
+
+            selected_labels = st.multiselect(
+                "Select users to delete",
+                options=list(user_options.keys()),
+                placeholder="Choose one or more users…",
+            )
+
+            if selected_labels:
+                st.markdown(f"""<div style="background:#1a0d0d;border:1px solid #f87171;border-radius:9px;
+                    padding:10px 14px;margin:10px 0">
+                    <b style="color:#f87171">⚠️ You are about to delete {len(selected_labels)} user(s):</b><br>
+                    <span style="color:#94a3b8;font-size:.85rem">{', '.join(selected_labels)}</span>
+                </div>""", unsafe_allow_html=True)
+
+                confirm = st.checkbox(f"I confirm I want to permanently delete {len(selected_labels)} user(s)")
+                if confirm:
+                    if st.button("🗑️ Delete Selected Users", type="primary", use_container_width=True):
+                        ids_to_delete = [user_options[lbl] for lbl in selected_labels]
+                        with conn() as db:
+                            for uid_del in ids_to_delete:
+                                db.execute("DELETE FROM habit_logs WHERE user_id=?", (uid_del,))
+                                db.execute("DELETE FROM habits WHERE user_id=?", (uid_del,))
+                                db.execute("DELETE FROM goals WHERE user_id=?", (uid_del,))
+                                db.execute("DELETE FROM journal_entries WHERE user_id=?", (uid_del,))
+                                db.execute("DELETE FROM daily_metrics WHERE user_id=?", (uid_del,))
+                                db.execute("DELETE FROM skill_ratings WHERE user_id=?", (uid_del,))
+                                db.execute("DELETE FROM users WHERE id=?", (uid_del,))
+                        st.success(f"✅ Deleted {len(ids_to_delete)} user(s) successfully.")
+                        st.rerun()
+
+        if admin_only:
+            st.markdown('<div class="sec-header" style="margin-top:20px">Admin Users (Protected)</div>', unsafe_allow_html=True)
+            st.info("Admin accounts cannot be deleted through this panel for safety reasons.")
+            for u in admin_only:
+                st.markdown(f"""<div style="background:#0d1627;border:1px solid #1e2d48;border-radius:9px;
+                    padding:10px 14px;margin:4px 0;opacity:.7">
+                    🛡️ <b style="color:#f87171">@{u['username']}</b>
+                    <span style="color:#475569;font-size:.75rem"> — Admin · {u['created_at']}</span>
+                </div>""", unsafe_allow_html=True)
+
+        # ── Promote / demote admin ──
+        st.markdown('<div class="sec-header" style="margin-top:20px">Grant / Revoke Admin Access</div>', unsafe_allow_html=True)
+        regular_users = [u for u in users if u["id"] != current_uid and not u["is_admin"]]
+        admin_users   = [u for u in users if u["id"] != current_uid and u["is_admin"]]
+
+        col_promote, col_demote = st.columns(2)
+        with col_promote:
+            if regular_users:
+                promote_opts = {f"@{u['username']}": u["id"] for u in regular_users}
+                to_promote = st.selectbox("Promote to Admin", ["— select —"] + list(promote_opts.keys()), key="promote_sel")
+                if to_promote != "— select —" and st.button("⬆️ Grant Admin", use_container_width=True):
+                    with conn() as db:
+                        db.execute("UPDATE users SET is_admin=1 WHERE id=?", (promote_opts[to_promote],))
+                    st.success(f"{to_promote} is now an admin.")
+                    st.rerun()
+            else:
+                st.info("No regular users to promote.")
+
+        with col_demote:
+            if admin_users:
+                demote_opts = {f"@{u['username']}": u["id"] for u in admin_users}
+                to_demote = st.selectbox("Revoke Admin", ["— select —"] + list(demote_opts.keys()), key="demote_sel")
+                if to_demote != "— select —" and st.button("⬇️ Revoke Admin", use_container_width=True):
+                    with conn() as db:
+                        db.execute("UPDATE users SET is_admin=0 WHERE id=?", (demote_opts[to_demote],))
+                    st.success(f"{to_demote} is no longer an admin.")
+                    st.rerun()
+            else:
+                st.info("No other admins to demote.")
+
+
 # ──────────────────────────────────────────────────────────────
 #  ROUTER
 # ──────────────────────────────────────────────────────────────
@@ -1671,12 +1932,14 @@ PAGES = {
     "Skills & Roadmap": page_skills,
     "Finance Tips":   page_finance,
     "Profile":        page_profile,
+    "Admin":          page_admin,
 }
 
 def main():
     # Init session state
     for k, v in [("logged_in", False), ("user_id", None), ("username", ""),
-                 ("role", "Developer"), ("stack", "React/PHP/Python"), ("lang", "en")]:
+                 ("role", "Developer"), ("stack", "React/PHP/Python"), ("lang", "en"),
+                 ("is_admin", False)]:
         if k not in st.session_state:
             st.session_state[k] = v
 
@@ -1695,6 +1958,7 @@ def main():
         "Skills & Roadmap": ["skill", "roadmap", "দক্ষতা", "রোডম্যাপ"],
         "Finance Tips":     ["finance", "আর্থিক"],
         "Profile":          ["profile", "প্রোফাইল"],
+        "Admin":            ["admin", "অ্যাডমিন"],
     }
     sel_lower = selected.lower()
     matched = "Dashboard"
