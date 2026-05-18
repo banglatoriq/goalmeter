@@ -203,39 +203,29 @@ hr { border-color: #1a2540 !important; }
 /* ── hide streamlit default header ── */
 #MainMenu, footer, header { visibility: hidden; }
 
-/* ── Sidebar Toggle Button ── */
-#sidebar-toggle-btn {
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    z-index: 99999;
-    background: #0d1627;
-    border: 1px solid #38bdf8;
-    color: #38bdf8;
-    border-radius: 8px;
-    width: 38px;
-    height: 38px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 12px rgba(56,189,248,.25);
-    transition: background .2s, color .2s, box-shadow .2s;
-}
-#sidebar-toggle-btn:hover {
-    background: #38bdf8;
-    color: #080c14;
-    box-shadow: 0 0 18px rgba(56,189,248,.45);
-}
+/* ── Hide Streamlit's own native sidebar collapse arrow (we have our own) ── */
+button[data-testid="collapsedControl"],
+button[kind="header"] { display: none !important; }
 
-/* ── Sidebar hidden state ── */
-body.sidebar-hidden section[data-testid="stSidebar"] {
-    display: none !important;
+/* ── Sidebar toggle button styling ── */
+div[data-testid="stButton"]:has(button[data-testid="sidebar_toggle_btn"]) > button,
+button[data-testid="sidebar_toggle_btn"] {
+    background: #0d1627 !important;
+    border: 1.5px solid #38bdf8 !important;
+    color: #38bdf8 !important;
+    border-radius: 9px !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    box-shadow: 0 2px 14px rgba(56,189,248,.28) !important;
 }
-body.sidebar-hidden .main .block-container {
-    max-width: 100% !important;
-    padding-left: 4rem !important;
+button[data-testid="sidebar_toggle_btn"]:hover {
+    background: #38bdf8 !important;
+    color: #080c14 !important;
+    box-shadow: 0 0 18px rgba(56,189,248,.5) !important;
 }
 
 /* ── Admin badge ── */
@@ -265,27 +255,7 @@ body.sidebar-hidden .main .block-container {
 </style>
 """, unsafe_allow_html=True)
 
-# ── Sidebar Toggle Floating Button (injected once per session) ──
-st.markdown("""
-<button id="sidebar-toggle-btn" title="Toggle Sidebar">☰</button>
-<script>
-(function() {
-    const btn = document.getElementById('sidebar-toggle-btn');
-    if (!btn) return;
-    let hidden = false;
-    btn.addEventListener('click', function() {
-        hidden = !hidden;
-        document.body.classList.toggle('sidebar-hidden', hidden);
-        btn.innerHTML = hidden ? '&#9776;' : '&#9776;';
-        btn.style.left = hidden ? '14px' : '14px';
-        btn.title = hidden ? 'Show Sidebar' : 'Hide Sidebar';
-        btn.innerHTML = hidden ? '&#9776;' : '&#10005;';
-    });
-    // Start with X (sidebar visible)
-    btn.innerHTML = '&#10005;';
-})();
-</script>
-""", unsafe_allow_html=True)
+
 
 
 # ──────────────────────────────────────────────────────────────
@@ -991,6 +961,34 @@ def render_sidebar():
     is_admin_user = bool(u and u["is_admin"])
     st.session_state.is_admin = is_admin_user
 
+    # ── Sidebar visibility state ──
+    if "sidebar_open" not in st.session_state:
+        st.session_state.sidebar_open = True
+
+    # ── Toggle button (fixed top-left, always visible) ──
+    # We inject it via CSS+HTML so it's truly position:fixed above everything
+    toggle_icon = "✕" if st.session_state.sidebar_open else "☰"
+    toggle_title = "Hide Sidebar" if st.session_state.sidebar_open else "Show Sidebar"
+    # ── Toggle button rendered as a small column at the top ──
+    toggle_col = st.columns([0.045, 0.955])
+    with toggle_col[0]:
+        if st.button(toggle_icon, key="sidebar_toggle_btn", help=toggle_title):
+            st.session_state.sidebar_open = not st.session_state.sidebar_open
+            st.rerun()
+
+    # ── Apply sidebar visibility via CSS ──
+    if not st.session_state.sidebar_open:
+        st.markdown("""
+        <style>
+        section[data-testid="stSidebar"] { display: none !important; }
+        /* Expand main content when sidebar is hidden */
+        .block-container { max-width: 98% !important; padding-left: 1rem !important; padding-right: 1rem !important; }
+        </style>
+        """, unsafe_allow_html=True)
+        # Return a default page when sidebar is hidden (keep last selected)
+        return st.session_state.get("last_page", "🏠  Dashboard")
+
+    # ── Render sidebar only when open ──
     with st.sidebar:
         st.markdown(f"""
         <div style="padding:16px 0 10px;text-align:center">
@@ -1048,6 +1046,7 @@ def render_sidebar():
             nav_items.append(t("nav_admin"))
 
         selected = st.radio("Navigate", nav_items, label_visibility="collapsed")
+        st.session_state.last_page = selected  # remember last page
         st.markdown("---")
 
         # Mini quote in sidebar
@@ -1939,7 +1938,7 @@ def main():
     # Init session state
     for k, v in [("logged_in", False), ("user_id", None), ("username", ""),
                  ("role", "Developer"), ("stack", "React/PHP/Python"), ("lang", "en"),
-                 ("is_admin", False)]:
+                 ("is_admin", False), ("sidebar_open", True), ("last_page", "")]:
         if k not in st.session_state:
             st.session_state[k] = v
 
@@ -1947,7 +1946,7 @@ def main():
         page_auth()
         return
 
-    selected = render_sidebar()  # returns cleaned label (English or Bengali)
+    selected = render_sidebar()  # returns nav label or last_page when sidebar hidden
     # Map translated labels back to page keys robustly via icon/keyword
     PAGE_KEYWORDS = {
         "Dashboard":        ["dashboard", "ড্যাশবোর্ড"],
@@ -1960,7 +1959,7 @@ def main():
         "Profile":          ["profile", "প্রোফাইল"],
         "Admin":            ["admin", "অ্যাডমিন"],
     }
-    sel_lower = selected.lower()
+    sel_lower = selected.lower() if selected else ""
     matched = "Dashboard"
     for page, keywords in PAGE_KEYWORDS.items():
         if any(kw in sel_lower for kw in keywords):
