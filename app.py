@@ -201,8 +201,28 @@ div[data-testid="stExpander"] { background:#0d1627; border:1px solid #1e2d48; bo
 
 hr { border-color: #1a2540 !important; }
 
-/* ── hide streamlit default header ── */
+/* ── hide streamlit default header/footer ── */
 #MainMenu, footer, header { visibility: hidden; }
+
+/* ── Force sidebar always visible — never collapse ── */
+section[data-testid="stSidebar"] {
+    transform: none !important;
+    min-width: 260px !important;
+    width: 260px !important;
+    display: flex !important;
+    visibility: visible !important;
+}
+/* Hide the native collapse/expand arrow button */
+button[data-testid="collapsedControl"],
+[data-testid="collapsedControl"],
+button[kind="header"],
+section[data-testid="stSidebar"] > div > button {
+    display: none !important;
+}
+/* Ensure main content doesn't overlap sidebar */
+.main .block-container {
+    padding-left: 1rem !important;
+}
 
 /* ── Sidebar nav radio items — bigger click targets ── */
 section[data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
@@ -2029,7 +2049,7 @@ def main():
     defaults = [
         ("logged_in", False), ("user_id", None), ("username", ""),
         ("role", "Developer"), ("stack", "React/PHP/Python"), ("lang", "en"),
-        ("is_admin", False), ("sidebar_open", True),
+        ("is_admin", False),
         ("last_page", "🏠  Dashboard"),
         ("admin_authenticated", False),
     ]
