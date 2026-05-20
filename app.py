@@ -203,9 +203,66 @@ hr { border-color: #1a2540 !important; }
 /* ── hide streamlit default header ── */
 #MainMenu, footer, header { visibility: hidden; }
 
-/* ── Hide Streamlit's own native sidebar collapse arrow (we have our own) ── */
-button[data-testid="collapsedControl"],
-button[kind="header"] { display: none !important; }
+/* ── Sidebar nav radio items — bigger click targets ── */
+section[data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
+section[data-testid="stSidebar"] .stRadio label {
+    padding: 7px 10px !important;
+    border-radius: 7px !important;
+    transition: background .15s ease !important;
+    cursor: pointer !important;
+    font-size: 0.87rem !important;
+    display: block !important;
+    width: 100% !important;
+}
+section[data-testid="stSidebar"] .stRadio label:hover {
+    background: #1e2d48 !important;
+}
+section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+}
+
+/* ── Sidebar user card ── */
+.sb-user-card {
+    background: #111c30;
+    border: 1px solid #1e2d48;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 8px 0 6px;
+}
+
+/* ── Sidebar progress ring area ── */
+.sb-progress {
+    text-align: center;
+    margin: 10px 0 4px;
+    padding: 10px;
+    background: #0a1020;
+    border-radius: 10px;
+    border: 1px solid #1a2540;
+}
+
+/* ── Sidebar mini quote ── */
+.sb-quote {
+    background: #111c30;
+    border: 1px solid #1e2d48;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 4px;
+}
+
+/* ── Admin login gate ── */
+.admin-gate {
+    background: linear-gradient(135deg, #1a0d0d 0%, #0f0808 100%);
+    border: 1px solid #f87171;
+    border-radius: 14px;
+    padding: 32px 36px;
+    max-width: 420px;
+    margin: 40px auto;
+    text-align: center;
+}
+.admin-gate-icon { font-size: 3rem; margin-bottom: 10px; }
+.admin-gate-title { font-size: 1.4rem; font-weight: 800; color: #f87171; margin-bottom: 6px; }
+.admin-gate-sub { font-size: .85rem; color: #64748b; margin-bottom: 20px; }
 
 /* ── Admin badge ── */
 .admin-badge {
@@ -937,49 +994,48 @@ def render_sidebar():
 
     # ── Admin check ──
     with conn() as db:
-        u = db.execute("SELECT is_admin FROM users WHERE id=?", (uid,)).fetchone()
-    is_admin_user = bool(u and u["is_admin"])
+        u_row = db.execute("SELECT is_admin FROM users WHERE id=?", (uid,)).fetchone()
+    is_admin_user = bool(u_row and u_row["is_admin"])
     st.session_state.is_admin = is_admin_user
 
-    # ── Sidebar visibility state ──
-    if "sidebar_open" not in st.session_state:
-        st.session_state.sidebar_open = True
-
-    # ── ALWAYS render the full sidebar (nav is always present in DOM) ──
-    # We show/hide it via CSS only, so the selected radio value is always available.
     with st.sidebar:
-        # Toggle button at the very top of sidebar
-        tog_label = "◀  Hide Sidebar" if st.session_state.sidebar_open else "▶  Show Sidebar"
-        if st.button(tog_label, key="sidebar_toggle_btn", use_container_width=True):
-            st.session_state.sidebar_open = not st.session_state.sidebar_open
-            st.rerun()
-
-        st.markdown(f"""
-        <div style="padding:10px 0 8px;text-align:center">
-            <div style="font-size:2rem;margin-bottom:4px">⚡</div>
+        # ── Logo / branding ──
+        st.markdown("""
+        <div style="padding:16px 0 10px;text-align:center">
+            <div style="font-size:2.2rem;margin-bottom:4px">⚡</div>
             <div class="logo-text">DevLife OS</div>
             <div class="logo-sub">Developer Success System</div>
         </div>
         """, unsafe_allow_html=True)
 
+        # ── User card ──
+        admin_badge = '<span class="admin-badge">ADMIN</span>' if is_admin_user else ""
         st.markdown(f"""
-        <div style="background:#111c30;border:1px solid #1e2d48;border-radius:10px;
-                    padding:12px 14px;margin:8px 0 6px">
-            <div style="font-size:.9rem;font-weight:700;color:#dce7f3">👤 {uname}</div>
-            <div style="font-size:.73rem;color:#475569;margin-top:2px">
-                {st.session_state.role} · {st.session_state.stack[:30]}
+        <div class="sb-user-card">
+            <div style="font-size:.9rem;font-weight:700;color:#dce7f3">
+                👤 {uname}{admin_badge}
+            </div>
+            <div style="font-size:.73rem;color:#475569;margin-top:3px">
+                {st.session_state.role}
+            </div>
+            <div style="font-size:.7rem;color:#38bdf8;margin-top:2px">
+                {st.session_state.stack[:35]}
             </div>
         </div>
         """, unsafe_allow_html=True)
 
+        # ── Today's progress ──
         st.markdown(f"""
-        <div style="text-align:center;margin:10px 0 4px">
-            <div style="font-size:.68rem;color:#475569;letter-spacing:1px;text-transform:uppercase">Today</div>
-            <div style="font-size:1.7rem;font-weight:800;color:{bar_color};line-height:1.1">{pct:.0f}%</div>
-            <div style="background:#111c30;border-radius:99px;height:7px;overflow:hidden;margin:4px 0 2px">
-                <div style="height:100%;border-radius:99px;background:{bar_color};width:{pct:.0f}%"></div>
+        <div class="sb-progress">
+            <div style="font-size:.65rem;color:#475569;letter-spacing:1px;
+                        text-transform:uppercase;margin-bottom:4px">Today's Progress</div>
+            <div style="font-size:1.8rem;font-weight:800;color:{bar_color};line-height:1.1">{pct:.0f}%</div>
+            <div style="background:#1a2540;border-radius:99px;height:6px;
+                        overflow:hidden;margin:6px 0 4px">
+                <div style="height:100%;border-radius:99px;background:{bar_color};
+                            width:{pct:.0f}%;transition:width .4s ease"></div>
             </div>
-            <div style="font-size:.7rem;color:#475569">{done}/{total} habits</div>
+            <div style="font-size:.7rem;color:#475569">{done} / {total} habits done</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -987,16 +1043,21 @@ def render_sidebar():
 
         # ── Language toggle ──
         lang_choice = st.radio(
-            "🌐 Language / ভাষা",
+            "🌐 Language",
             ["English", "বাংলা"],
-            index=0 if st.session_state.get("lang","en") == "en" else 1,
+            index=0 if st.session_state.get("lang", "en") == "en" else 1,
             horizontal=True,
             key="lang_radio",
         )
         st.session_state.lang = "en" if lang_choice == "English" else "bn"
+
         st.markdown("---")
 
         # ── Navigation ──
+        st.markdown('<div style="font-size:.65rem;color:#475569;letter-spacing:1.2px;'
+                    'text-transform:uppercase;margin-bottom:6px">Navigation</div>',
+                    unsafe_allow_html=True)
+
         nav_items = [
             t("nav_dashboard"),
             t("nav_daily"),
@@ -1010,49 +1071,38 @@ def render_sidebar():
         if is_admin_user:
             nav_items.append(t("nav_admin"))
 
-        selected = st.radio("Navigate", nav_items, label_visibility="collapsed")
+        # Restore last selected page if available
+        last = st.session_state.get("last_page", nav_items[0])
+        default_idx = nav_items.index(last) if last in nav_items else 0
+
+        selected = st.radio(
+            "Navigate",
+            nav_items,
+            index=default_idx,
+            label_visibility="collapsed",
+            key="main_nav_radio",
+        )
         st.session_state.last_page = selected
+
         st.markdown("---")
 
-        # ── Mini quote ──
+        # ── Mini motivational quote ──
         qt, qa, _ = random_quote_by_cat("Mindset")
         st.markdown(f"""
-        <div style="background:#111c30;border:1px solid #1e2d48;border-radius:8px;
-                    padding:10px 12px;margin-top:4px">
-            <div style="font-size:.72rem;color:#94a3b8;font-style:italic;line-height:1.5">"{qt[:110]}…"</div>
-            <div style="font-size:.65rem;color:#38bdf8;margin-top:5px">— {qa}</div>
+        <div class="sb-quote">
+            <div style="font-size:.71rem;color:#94a3b8;font-style:italic;
+                        line-height:1.55">"{qt[:100]}…"</div>
+            <div style="font-size:.64rem;color:#38bdf8;margin-top:5px;font-weight:600">— {qa}</div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button(t("logout"), use_container_width=True, key="logout_btn"):
-            for k in ["logged_in","user_id","username","role","stack","sidebar_open","last_page"]:
-                st.session_state.pop(k, None)
-            st.rerun()
 
-    # ── CSS: hide the sidebar panel when closed, keep it in DOM ──
-    if not st.session_state.sidebar_open:
-        st.markdown("""
-        <style>
-        section[data-testid="stSidebar"] {
-            visibility: hidden !important;
-            width: 0px !important;
-            min-width: 0px !important;
-            flex: none !important;
-        }
-        /* Let main content fill the full width */
-        [data-testid="stSidebarUserContent"] { display: none !important; }
-        </style>
-        """, unsafe_allow_html=True)
-    else:
-        # Make sure it's fully visible when open
-        st.markdown("""
-        <style>
-        section[data-testid="stSidebar"] {
-            visibility: visible !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+        # ── Logout ──
+        if st.button(t("logout"), use_container_width=True, key="logout_btn"):
+            for k in list(st.session_state.keys()):
+                del st.session_state[k]
+            st.rerun()
 
     return selected.strip()
 
@@ -1761,7 +1811,51 @@ def page_admin():
         st.error("⛔ Access denied. Admins only.")
         return
 
+    # ── Admin re-authentication gate ──
+    if not st.session_state.get("admin_authenticated"):
+        st.markdown("""
+        <div class="admin-gate">
+            <div class="admin-gate-icon">🛡️</div>
+            <div class="admin-gate-title">Admin Authentication</div>
+            <div class="admin-gate-sub">
+                Re-enter your password to access the Admin Panel.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        _, mid, _ = st.columns([1, 1.4, 1])
+        with mid:
+            with st.form("admin_auth_form"):
+                admin_pw = st.text_input(
+                    "Admin Password",
+                    type="password",
+                    placeholder="Enter your password…",
+                )
+                submitted = st.form_submit_button("🔓 Unlock Admin Panel", use_container_width=True)
+                if submitted:
+                    # Verify against stored hash
+                    with conn() as db:
+                        row = db.execute(
+                            "SELECT id FROM users WHERE id=? AND password_hash=?",
+                            (st.session_state.user_id, make_hash(admin_pw)),
+                        ).fetchone()
+                    if row:
+                        st.session_state.admin_authenticated = True
+                        st.rerun()
+                    else:
+                        st.error("❌ Incorrect password. Access denied.")
+        return  # Don't render the panel until authenticated
+
+    # ── Authenticated — show full admin panel ──
     st.markdown("## 🛡️ Admin Panel")
+
+    # Lock button to end admin session
+    col_title, col_lock = st.columns([8, 2])
+    with col_lock:
+        if st.button("🔒 Lock Panel", use_container_width=True):
+            st.session_state.admin_authenticated = False
+            st.rerun()
+
     st.markdown("""<div class="admin-card">
         <b style="color:#f87171;font-size:1.05rem">⚠️ Administrator Zone</b><br>
         <span style="color:#94a3b8;font-size:.85rem">
@@ -1930,6 +2024,7 @@ def main():
         ("role", "Developer"), ("stack", "React/PHP/Python"), ("lang", "en"),
         ("is_admin", False), ("sidebar_open", True),
         ("last_page", "🏠  Dashboard"),
+        ("admin_authenticated", False),
     ]
     for k, v in defaults:
         if k not in st.session_state:
