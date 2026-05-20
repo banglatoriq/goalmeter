@@ -42,6 +42,7 @@ html, body, [class*="css"], .stApp {
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0d1220 0%, #080c14 100%) !important;
     border-right: 1px solid #1a2540 !important;
+    overflow-y: auto !important;
 }
 section[data-testid="stSidebar"] * { color: #c5d3e8 !important; }
 section[data-testid="stSidebar"] .stRadio label { font-size: 0.88rem !important; }
@@ -206,18 +207,27 @@ hr { border-color: #1a2540 !important; }
 /* ── Sidebar nav radio items — bigger click targets ── */
 section[data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
 section[data-testid="stSidebar"] .stRadio label {
-    padding: 7px 10px !important;
-    border-radius: 7px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
     transition: background .15s ease !important;
     cursor: pointer !important;
-    font-size: 0.87rem !important;
+    font-size: 0.88rem !important;
     display: block !important;
     width: 100% !important;
+    margin: 1px 0 !important;
 }
 section[data-testid="stSidebar"] .stRadio label:hover {
     background: #1e2d48 !important;
 }
-section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+section[data-testid="stSidebar"] .stRadio [data-testid="stMarkdownContainer"] p {
+    font-size: 0.88rem !important;
+    line-height: 1.4 !important;
+}
+/* Hide the radio circle dot — make it look like a nav list */
+section[data-testid="stSidebar"] .stRadio [data-baseweb="radio"] > div:first-child {
+    display: none !important;
+}
+section[data-testid="stSidebar"] .stMarkdownContainer p {
     font-size: 0.82rem !important;
     line-height: 1.5 !important;
 }
@@ -231,11 +241,10 @@ section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
     margin: 8px 0 6px;
 }
 
-/* ── Sidebar progress ring area ── */
+/* ── Sidebar progress area ── */
 .sb-progress {
-    text-align: center;
-    margin: 10px 0 4px;
-    padding: 10px;
+    margin: 6px 0 4px;
+    padding: 8px 10px;
     background: #0a1020;
     border-radius: 10px;
     border: 1px solid #1a2540;
@@ -1027,35 +1036,38 @@ def render_sidebar():
         # ── Today's progress ──
         st.markdown(f"""
         <div class="sb-progress">
-            <div style="font-size:.65rem;color:#475569;letter-spacing:1px;
-                        text-transform:uppercase;margin-bottom:4px">Today's Progress</div>
-            <div style="font-size:1.8rem;font-weight:800;color:{bar_color};line-height:1.1">{pct:.0f}%</div>
-            <div style="background:#1a2540;border-radius:99px;height:6px;
-                        overflow:hidden;margin:6px 0 4px">
-                <div style="height:100%;border-radius:99px;background:{bar_color};
-                            width:{pct:.0f}%;transition:width .4s ease"></div>
+            <div style="font-size:.62rem;color:#475569;letter-spacing:1px;
+                        text-transform:uppercase;margin-bottom:2px">Today</div>
+            <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-size:1.5rem;font-weight:800;color:{bar_color};line-height:1">{pct:.0f}%</div>
+                <div style="flex:1">
+                    <div style="background:#1a2540;border-radius:99px;height:5px;overflow:hidden">
+                        <div style="height:100%;border-radius:99px;background:{bar_color};
+                                    width:{pct:.0f}%"></div>
+                    </div>
+                    <div style="font-size:.65rem;color:#475569;margin-top:2px">{done}/{total} habits</div>
+                </div>
             </div>
-            <div style="font-size:.7rem;color:#475569">{done} / {total} habits done</div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("---")
 
-        # ── Language toggle ──
+        # ── Language toggle (compact) ──
         lang_choice = st.radio(
-            "🌐 Language",
-            ["English", "বাংলা"],
+            "🌐",
+            ["EN", "বাং"],
             index=0 if st.session_state.get("lang", "en") == "en" else 1,
             horizontal=True,
             key="lang_radio",
         )
-        st.session_state.lang = "en" if lang_choice == "English" else "bn"
+        st.session_state.lang = "en" if lang_choice == "EN" else "bn"
 
         st.markdown("---")
 
         # ── Navigation ──
-        st.markdown('<div style="font-size:.65rem;color:#475569;letter-spacing:1.2px;'
-                    'text-transform:uppercase;margin-bottom:6px">Navigation</div>',
+        st.markdown('<div style="font-size:.62rem;color:#475569;letter-spacing:1.2px;'
+                    'text-transform:uppercase;margin-bottom:4px;padding-left:4px">Menu</div>',
                     unsafe_allow_html=True)
 
         nav_items = [
@@ -1071,14 +1083,9 @@ def render_sidebar():
         if is_admin_user:
             nav_items.append(t("nav_admin"))
 
-        # Restore last selected page if available
-        last = st.session_state.get("last_page", nav_items[0])
-        default_idx = nav_items.index(last) if last in nav_items else 0
-
         selected = st.radio(
             "Navigate",
             nav_items,
-            index=default_idx,
             label_visibility="collapsed",
             key="main_nav_radio",
         )
