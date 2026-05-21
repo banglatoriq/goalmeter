@@ -1074,9 +1074,11 @@ def page_auth():
 
 
 # ──────────────────────────────────────────────────────────────
-#  OFF-CANVAS DRAWER  (self-contained iframe via components.html)
+#  TOP NAVBAR  (fixed header, always visible, all menu items)
 # ──────────────────────────────────────────────────────────────
 def render_sidebar():
+    import json
+
     uid   = st.session_state.user_id
     uname = st.session_state.username
     today = datetime.date.today().isoformat()
@@ -1130,298 +1132,251 @@ def render_sidebar():
             del st.session_state[k]
         st.rerun()
 
-    # ── Mini quote ──
-    qt, qa, _ = random_quote_by_cat("Mindset")
-    quote_snippet = qt[:88] + "…"
-
-    # ── Build nav items JSON for JS ──
-    import json
+    # ── Build nav items for JS ──
     nav_json = json.dumps([
-        {"label": item, "key": item.replace(" ", "_").replace("/", "_"),
+        {"label": item,
+         "key":   item.replace(" ", "_").replace("/", "_"),
          "active": item == selected_label}
         for item in nav_items
     ])
 
-    admin_badge = (
-        '<span style="display:inline-block;background:linear-gradient(90deg,#f87171,#fbbf24);'
-        'color:#080c14;font-size:.55rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;'
-        'padding:1px 6px;border-radius:99px;margin-left:5px;vertical-align:middle">ADMIN</span>'
-        if is_admin_user else ""
-    )
+    role_str  = st.session_state.role[:28]
+    stack_str = st.session_state.stack[:30]
+    admin_dot = "🔴 " if is_admin_user else ""
 
-    # ── Current page URL (passed to JS for navigation) ──
-    # We pass the base URL via a data attribute; JS reads window.location from inside the iframe
-    role_str  = st.session_state.role[:30]
-    stack_str = st.session_state.stack[:35]
-
-    drawer_component = f"""<!DOCTYPE html>
+    navbar_html = f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <style>
   * {{ margin:0; padding:0; box-sizing:border-box; }}
-  body {{ background:transparent; font-family:'Inter',sans-serif; overflow:hidden; }}
+  body {{
+    background: transparent;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow: hidden;
+  }}
 
-  /* ── Hamburger toggle — fixed top-left of viewport ── */
-  #toggle {{
+  /* ── Fixed navbar bar ── */
+  #navbar {{
     position: fixed;
-    top: 14px; left: 14px;
-    width: 44px; height: 44px;
-    background: #0d1627;
-    border: 1px solid #1e2d48;
-    border-radius: 10px;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: linear-gradient(90deg, #080c14 0%, #0d1220 100%);
+    border-bottom: 1px solid #1a2540;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 4px;
+    z-index: 9999;
+    box-shadow: 0 2px 20px rgba(0,0,0,.5);
+  }}
+
+  /* Logo */
+  .nb-logo {{
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    text-decoration: none;
+  }}
+  .nb-logo-icon {{ font-size: 1.3rem; line-height: 1; }}
+  .nb-logo-text {{
+    font-size: .95rem;
+    font-weight: 800;
+    color: #38bdf8;
+    letter-spacing: -.4px;
+    white-space: nowrap;
+  }}
+
+  /* Divider */
+  .nb-sep {{
+    width: 1px; height: 28px;
+    background: #1e2d48;
+    margin: 0 8px;
+    flex-shrink: 0;
+  }}
+
+  /* Nav links */
+  .nb-links {{
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }}
+  .nb-links::-webkit-scrollbar {{ display: none; }}
+
+  .nb-link {{
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: .78rem;
+    font-weight: 500;
+    color: #94a3b8;
     cursor: pointer;
+    border: none;
+    background: transparent;
+    white-space: nowrap;
+    transition: background .15s, color .15s;
+    font-family: inherit;
+    letter-spacing: .1px;
+    flex-shrink: 0;
+  }}
+  .nb-link:hover  {{ background: #1e2d48; color: #dce7f3; }}
+  .nb-link.active {{
+    background: #1e2d48;
+    color: #38bdf8;
+    font-weight: 700;
+    box-shadow: inset 0 -2px 0 #38bdf8;
+  }}
+
+  /* Right side: user info + progress + logout */
+  .nb-right {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }}
+
+  .nb-user {{
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.3;
+  }}
+  .nb-username {{
+    font-size: .78rem;
+    font-weight: 700;
+    color: #dce7f3;
+    white-space: nowrap;
+  }}
+  .nb-role {{
+    font-size: .65rem;
+    color: #475569;
+    white-space: nowrap;
+  }}
+
+  /* Progress pill */
+  .nb-progress {{
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 5px;
-    z-index: 9999;
-    box-shadow: 0 2px 16px rgba(0,0,0,.5);
-    transition: background .2s, box-shadow .2s;
-  }}
-  #toggle:hover {{
-    background: #1e2d48;
-    box-shadow: 0 0 20px rgba(56,189,248,.3);
-  }}
-  .bar {{
-    width: 20px; height: 2px;
-    background: #38bdf8;
-    border-radius: 2px;
-    transition: transform .25s ease, opacity .25s ease;
-    transform-origin: center;
-  }}
-  #toggle.open .bar:nth-child(1) {{ transform: translateY(7px) rotate(45deg); }}
-  #toggle.open .bar:nth-child(2) {{ opacity: 0; transform: scaleX(0); }}
-  #toggle.open .bar:nth-child(3) {{ transform: translateY(-7px) rotate(-45deg); }}
-
-  /* ── Backdrop overlay ── */
-  #overlay {{
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.6);
-    backdrop-filter: blur(3px);
-    z-index: 9997;
-  }}
-  #overlay.visible {{ display: block; }}
-
-  /* ── Drawer panel ── */
-  #drawer {{
-    position: fixed;
-    top: 0; left: 0;
-    width: 270px;
-    height: 100vh;
-    background: linear-gradient(180deg, #0d1220 0%, #080c14 100%);
-    border-right: 1px solid #1a2540;
-    z-index: 9998;
-    transform: translateX(-100%);
-    transition: transform .3s cubic-bezier(.4,0,.2,1);
-    overflow-y: auto;
-    padding-bottom: 24px;
-    box-shadow: 4px 0 32px rgba(0,0,0,.7);
-  }}
-  #drawer.open {{ transform: translateX(0); }}
-  #drawer::-webkit-scrollbar {{ width: 4px; }}
-  #drawer::-webkit-scrollbar-track {{ background: #080c14; }}
-  #drawer::-webkit-scrollbar-thumb {{ background: #1e2d48; border-radius: 99px; }}
-
-  /* ── Drawer sections ── */
-  .logo-area {{
-    padding: 20px 0 14px;
-    text-align: center;
-    border-bottom: 1px solid #1a2540;
-  }}
-  .logo-icon {{ font-size: 2rem; margin-bottom: 4px; }}
-  .logo-name {{ font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: -.5px; }}
-  .logo-sub  {{ font-size: .62rem; color: #475569; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }}
-
-  .user-card {{
-    background: #111c30;
-    border: 1px solid #1e2d48;
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin: 10px 12px 6px;
-  }}
-  .user-name  {{ font-size: .88rem; font-weight: 700; color: #dce7f3; }}
-  .user-role  {{ font-size: .72rem; color: #475569; margin-top: 3px; }}
-  .user-stack {{ font-size: .68rem; color: #38bdf8; margin-top: 2px; }}
-
-  .progress-box {{
-    margin: 6px 12px 4px;
-    padding: 8px 10px;
-    background: #0a1020;
-    border-radius: 10px;
-    border: 1px solid #1a2540;
-  }}
-  .prog-label {{ font-size: .6rem; color: #475569; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }}
-  .prog-row   {{ display: flex; align-items: center; gap: 8px; }}
-  .prog-pct   {{ font-size: 1.4rem; font-weight: 800; line-height: 1; }}
-  .prog-track {{ flex: 1; background: #1a2540; border-radius: 99px; height: 5px; overflow: hidden; }}
-  .prog-fill  {{ height: 100%; border-radius: 99px; }}
-  .prog-count {{ font-size: .63rem; color: #475569; margin-top: 2px; }}
-
-  .divider {{ border: none; border-top: 1px solid #1a2540; margin: 10px 12px; }}
-
-  .section-label {{
-    font-size: .62rem; color: #475569;
-    letter-spacing: 1.2px; text-transform: uppercase;
-    padding: 2px 14px 4px;
-  }}
-
-  .nav-area {{ padding: 0 8px; }}
-  .nav-btn {{
-    display: block; width: 100%;
-    padding: 9px 12px;
-    border-radius: 8px;
-    font-size: .88rem; color: #c5d3e8;
-    cursor: pointer;
-    border: none; background: transparent;
-    text-align: left;
-    transition: background .15s, color .15s;
-    font-family: 'Inter', sans-serif;
-    margin: 1px 0;
-    letter-spacing: .2px;
-  }}
-  .nav-btn:hover  {{ background: #1e2d48; color: #38bdf8; }}
-  .nav-btn.active {{ background: #1e2d48; color: #38bdf8; font-weight: 600; }}
-
-  .quote-box {{
-    background: #111c30;
+    gap: 6px;
+    background: #0d1627;
     border: 1px solid #1e2d48;
     border-radius: 8px;
-    padding: 10px 12px;
-    margin: 6px 12px 4px;
+    padding: 4px 10px;
   }}
-  .quote-text   {{ font-size: .7rem; color: #94a3b8; font-style: italic; line-height: 1.55; }}
-  .quote-author {{ font-size: .63rem; color: #38bdf8; margin-top: 4px; font-weight: 600; }}
+  .nb-pct {{
+    font-size: .82rem;
+    font-weight: 800;
+    line-height: 1;
+  }}
+  .nb-track {{
+    width: 48px;
+    height: 4px;
+    background: #1a2540;
+    border-radius: 99px;
+    overflow: hidden;
+  }}
+  .nb-fill {{
+    height: 100%;
+    border-radius: 99px;
+  }}
+  .nb-habits {{
+    font-size: .62rem;
+    color: #475569;
+    white-space: nowrap;
+  }}
 
-  .logout-btn {{
-    display: block;
-    width: calc(100% - 24px);
-    margin: 10px 12px 0;
-    padding: 9px 12px;
-    border-radius: 8px;
-    font-size: .88rem; color: #f87171;
+  /* Logout button */
+  .nb-logout {{
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-size: .75rem;
+    font-weight: 600;
+    color: #f87171;
     cursor: pointer;
     border: 1px solid #4a1a1a;
     background: #1a0d0d;
-    text-align: center;
     transition: background .15s;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
   }}
-  .logout-btn:hover {{ background: #2a1010; }}
+  .nb-logout:hover {{ background: #2a1010; }}
 </style>
 </head>
 <body>
 
-<!-- Hamburger button -->
-<button id="toggle" title="Menu" aria-label="Toggle menu">
-  <div class="bar"></div>
-  <div class="bar"></div>
-  <div class="bar"></div>
-</button>
-
-<!-- Backdrop -->
-<div id="overlay"></div>
-
-<!-- Drawer -->
-<div id="drawer">
-  <div class="logo-area">
-    <div class="logo-icon">⚡</div>
-    <div class="logo-name">DevLife OS</div>
-    <div class="logo-sub">Developer Success System</div>
+<nav id="navbar">
+  <!-- Logo -->
+  <div class="nb-logo">
+    <span class="nb-logo-icon">⚡</span>
+    <span class="nb-logo-text">DevLife OS</span>
   </div>
 
-  <div class="user-card">
-    <div class="user-name">👤 {uname} {admin_badge}</div>
-    <div class="user-role">{role_str}</div>
-    <div class="user-stack">{stack_str}</div>
-  </div>
+  <div class="nb-sep"></div>
 
-  <div class="progress-box">
-    <div class="prog-label">Today</div>
-    <div class="prog-row">
-      <div class="prog-pct" style="color:{bar_color}">{pct:.0f}%</div>
-      <div style="flex:1">
-        <div class="prog-track">
-          <div class="prog-fill" style="background:{bar_color};width:{pct:.0f}%"></div>
-        </div>
-        <div class="prog-count">{done}/{total} habits</div>
-      </div>
+  <!-- Nav links (built by JS) -->
+  <div class="nb-links" id="nb-links"></div>
+
+  <!-- Right side -->
+  <div class="nb-right">
+    <div class="nb-user">
+      <span class="nb-username">{admin_dot}{uname}</span>
+      <span class="nb-role">{role_str}</span>
     </div>
+
+    <div class="nb-progress">
+      <span class="nb-pct" style="color:{bar_color}">{pct:.0f}%</span>
+      <div class="nb-track">
+        <div class="nb-fill" style="background:{bar_color};width:{pct:.0f}%"></div>
+      </div>
+      <span class="nb-habits">{done}/{total}</span>
+    </div>
+
+    <button class="nb-logout" id="nb-logout">🚪 Logout</button>
   </div>
-
-  <hr class="divider">
-  <div class="section-label">Menu</div>
-  <div class="nav-area" id="nav-area"></div>
-  <hr class="divider">
-
-  <div class="quote-box">
-    <div class="quote-text">"{quote_snippet}"</div>
-    <div class="quote-author">— {qa}</div>
-  </div>
-
-  <button class="logout-btn" id="logout-btn">🚪 Logout</button>
-</div>
+</nav>
 
 <script>
 var NAV_ITEMS = {nav_json};
-var isOpen = false;
 
-// Build nav buttons
-var navArea = document.getElementById('nav-area');
+var linksEl = document.getElementById('nb-links');
 NAV_ITEMS.forEach(function(item) {{
   var btn = document.createElement('button');
-  btn.className = 'nav-btn' + (item.active ? ' active' : '');
+  btn.className = 'nb-link' + (item.active ? ' active' : '');
   btn.textContent = item.label;
-  btn.addEventListener('click', function() {{ navigate(item.key); }});
-  navArea.appendChild(btn);
+  btn.addEventListener('click', function() {{
+    var url = new URL(window.parent.location.href);
+    url.searchParams.set('page', item.key);
+    window.parent.location.href = url.toString();
+  }});
+  linksEl.appendChild(btn);
 }});
 
-function toggle() {{ isOpen ? close() : open(); }}
-
-function open() {{
-  isOpen = true;
-  document.getElementById('drawer').classList.add('open');
-  document.getElementById('toggle').classList.add('open');
-  document.getElementById('overlay').classList.add('visible');
-}}
-
-function close() {{
-  isOpen = false;
-  document.getElementById('drawer').classList.remove('open');
-  document.getElementById('toggle').classList.remove('open');
-  document.getElementById('overlay').classList.remove('visible');
-}}
-
-function navigate(pageKey) {{
-  close();
-  var url = new URL(window.parent.location.href);
-  url.searchParams.set('page', pageKey);
-  window.parent.location.href = url.toString();
-}}
-
-function logout() {{
-  close();
+document.getElementById('nb-logout').addEventListener('click', function() {{
   var url = new URL(window.parent.location.href);
   url.searchParams.set('page', '__logout__');
   window.parent.location.href = url.toString();
-}}
-
-document.getElementById('toggle').addEventListener('click', toggle);
-document.getElementById('overlay').addEventListener('click', close);
-document.getElementById('logout-btn').addEventListener('click', logout);
-
-document.addEventListener('keydown', function(e) {{
-  if (e.key === 'Escape') close();
 }});
 </script>
 </body>
 </html>"""
 
-    components.html(drawer_component, height=60, scrolling=False)
+    # height=52 matches the navbar height; the iframe sits at the top
+    components.html(navbar_html, height=52, scrolling=False)
+
+    # Push page content down so it doesn't hide under the navbar
+    st.markdown(
+        '<div style="height:52px"></div>',
+        unsafe_allow_html=True,
+    )
+
     return selected_label.strip()
 
 
