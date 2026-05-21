@@ -204,25 +204,180 @@ hr { border-color: #1a2540 !important; }
 /* ── hide streamlit default header/footer ── */
 #MainMenu, footer, header { visibility: hidden; }
 
-/* ── Force sidebar always visible — never collapse ── */
+/* ── Hide native Streamlit sidebar completely ── */
 section[data-testid="stSidebar"] {
-    transform: none !important;
-    min-width: 260px !important;
-    width: 260px !important;
-    display: flex !important;
-    visibility: visible !important;
-}
-/* Hide the native collapse/expand arrow button */
-button[data-testid="collapsedControl"],
-[data-testid="collapsedControl"],
-button[kind="header"],
-section[data-testid="stSidebar"] > div > button {
     display: none !important;
 }
-/* Ensure main content doesn't overlap sidebar */
+button[data-testid="collapsedControl"],
+[data-testid="collapsedControl"] {
+    display: none !important;
+}
+/* Main content takes full width */
 .main .block-container {
     padding-left: 1rem !important;
+    max-width: 100% !important;
 }
+
+/* ── Hamburger toggle button (fixed top-left) ── */
+#dv-drawer-toggle {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 99999;
+    width: 42px;
+    height: 42px;
+    background: #0d1627;
+    border: 1px solid #1e2d48;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background .2s ease, box-shadow .2s ease;
+    box-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+#dv-drawer-toggle:hover {
+    background: #1e2d48;
+    box-shadow: 0 0 16px rgba(56,189,248,.25);
+}
+#dv-drawer-toggle .bar {
+    width: 20px; height: 2px;
+    background: #38bdf8;
+    border-radius: 2px;
+    transition: all .25s ease;
+}
+#dv-drawer-toggle.open .bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+#dv-drawer-toggle.open .bar:nth-child(2) {
+    opacity: 0; transform: scaleX(0);
+}
+#dv-drawer-toggle.open .bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ── Overlay backdrop ── */
+#dv-drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 99997;
+    backdrop-filter: blur(2px);
+    transition: opacity .3s ease;
+}
+#dv-drawer-overlay.visible { display: block; }
+
+/* ── Off-canvas drawer panel ── */
+#dv-drawer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 270px;
+    height: 100vh;
+    background: linear-gradient(180deg, #0d1220 0%, #080c14 100%);
+    border-right: 1px solid #1a2540;
+    z-index: 99998;
+    transform: translateX(-100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+    padding: 0 0 24px 0;
+    box-shadow: 4px 0 32px rgba(0,0,0,.6);
+}
+#dv-drawer.open {
+    transform: translateX(0);
+}
+/* Scrollbar inside drawer */
+#dv-drawer::-webkit-scrollbar { width: 4px; }
+#dv-drawer::-webkit-scrollbar-track { background: #080c14; }
+#dv-drawer::-webkit-scrollbar-thumb { background: #1e2d48; border-radius: 99px; }
+
+/* ── Drawer inner content ── */
+.dv-drawer-logo {
+    padding: 20px 0 12px;
+    text-align: center;
+    border-bottom: 1px solid #1a2540;
+    margin-bottom: 10px;
+}
+.dv-drawer-user {
+    background: #111c30;
+    border: 1px solid #1e2d48;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 8px 14px 6px;
+}
+.dv-drawer-progress {
+    margin: 6px 14px 4px;
+    padding: 8px 10px;
+    background: #0a1020;
+    border-radius: 10px;
+    border: 1px solid #1a2540;
+}
+.dv-drawer-nav {
+    padding: 0 10px;
+    margin-top: 8px;
+}
+.dv-drawer-nav-item {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: #c5d3e8;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    text-align: left;
+    transition: background .15s ease, color .15s ease;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: .2px;
+    margin: 1px 0;
+}
+.dv-drawer-nav-item:hover {
+    background: #1e2d48;
+    color: #38bdf8;
+}
+.dv-drawer-nav-item.active {
+    background: #1e2d48;
+    color: #38bdf8;
+    font-weight: 600;
+}
+.dv-drawer-divider {
+    border: none;
+    border-top: 1px solid #1a2540;
+    margin: 10px 14px;
+}
+.dv-drawer-section-label {
+    font-size: .62rem;
+    color: #475569;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 4px 14px 2px;
+}
+.dv-drawer-quote {
+    background: #111c30;
+    border: 1px solid #1e2d48;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 8px 14px 4px;
+}
+.dv-drawer-logout {
+    margin: 10px 14px 0;
+    width: calc(100% - 28px);
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: #f87171;
+    cursor: pointer;
+    border: 1px solid #4a1a1a;
+    background: #1a0d0d;
+    text-align: center;
+    transition: background .15s ease;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+}
+.dv-drawer-logout:hover { background: #2a1010; }
 
 /* ── Sidebar nav radio items — bigger click targets ── */
 section[data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
@@ -306,6 +461,51 @@ section[data-testid="stSidebar"] .stMarkdownContainer p {
     border-radius: 99px;
     margin-left: 6px;
     vertical-align: middle;
+}
+
+/* ── Outcompete accent buttons ── */
+.btn-fire > button {
+    background: linear-gradient(135deg, #f43127, #ff6b35) !important;
+    color: #fff !important; border: none !important;
+    border-radius: 8px !important; font-weight: 700 !important;
+    box-shadow: 0 0 18px rgba(244,49,39,.4) !important;
+    transition: all .25s ease !important;
+}
+.btn-fire > button:hover {
+    background: linear-gradient(135deg, #ff6b35, #f43127) !important;
+    box-shadow: 0 0 28px rgba(244,49,39,.6) !important;
+}
+.btn-gold > button {
+    background: linear-gradient(135deg, #fcb302, #f97316) !important;
+    color: #080c14 !important; border: none !important;
+    border-radius: 8px !important; font-weight: 700 !important;
+    box-shadow: 0 0 18px rgba(252,179,2,.35) !important;
+    transition: all .25s ease !important;
+}
+.btn-gold > button:hover {
+    box-shadow: 0 0 28px rgba(252,179,2,.55) !important;
+}
+/* ── Outcompete journal section cards ── */
+.oc-section {
+    background: linear-gradient(135deg, #0d1627 0%, #0a1020 100%);
+    border: 1px solid #1e2d48;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+}
+.oc-section-fire  { border-left: 4px solid #f43127; }
+.oc-section-gold  { border-left: 4px solid #fcb302; }
+.oc-section-teal  { border-left: 4px solid #2dd4bf; }
+.oc-section-blue  { border-left: 4px solid #38bdf8; }
+/* ── Mindset checkbox row ── */
+.mindset-row {
+    background: #0d1627; border: 1px solid #1e2d48; border-radius: 9px;
+    padding: 10px 14px; margin: 5px 0;
+}
+/* ── 1% better tracker ── */
+.one-pct-bar {
+    background: linear-gradient(90deg, #f43127, #fcb302, #34d399);
+    height: 8px; border-radius: 99px;
 }
 
 /* ── Admin panel ── */
@@ -560,6 +760,31 @@ def init_db():
         except sqlite3.OperationalError:
             pass
 
+        # ── New Outcompete journal columns ──
+        for col_def in [
+            "nightly_review TEXT DEFAULT ''",
+            "tomorrow_plan TEXT DEFAULT ''",
+            "info_capture TEXT DEFAULT ''",
+            "mindset_risk INTEGER DEFAULT 0",
+            "mindset_compare INTEGER DEFAULT 0",
+        ]:
+            col_name = col_def.split()[0]
+            try:
+                db.execute(f"ALTER TABLE journal_entries ADD COLUMN {col_def}")
+            except sqlite3.OperationalError:
+                pass
+
+        # ── New Outcompete metrics columns ──
+        for col_def in [
+            "quick_decisions INTEGER DEFAULT 5",
+            "focus_pct INTEGER DEFAULT 50",
+            "one_pct_better INTEGER DEFAULT 50",
+        ]:
+            try:
+                db.execute(f"ALTER TABLE daily_metrics ADD COLUMN {col_def}")
+            except sqlite3.OperationalError:
+                pass
+
         # Auto-promote user named 'admin' to admin
         try:
             db.execute("UPDATE users SET is_admin=1 WHERE username='admin'")
@@ -576,36 +801,31 @@ def make_hash(pw):
 
 DEFAULT_HABITS = [
     # (name, category, slot)
-    # 🌅 Morning Routine — সকালের রুটিন
-    ("No Phone First 30 Mins — ঘুম থেকে উঠে প্রথম ৩০ মিনিট ফোন না ধরা", "Mental", "Morning"),
-    ("10 Min Stillness/Breathing — ১০ মিনিট চুপচাপ বসা বা প্রাণায়াম/Breathing", "Mental", "Morning"),
-    ("Read 10 Verses of Quran — প্রতিদিন ১০ টি আয়াত কুরআন পাঠ", "Mental", "Morning"),  # <-- এখানে যুক্ত করা হয়েছে
-    ("Physical Activation (15m) — শরীর সচল করা (১৫ মিনিট হালকা ব্যায়াম)", "Health", "Morning"),
-    ("Deep Learning Block (60m) — গভীর মনোযোগ দিয়ে নতুন কিছু শেখা (১ ঘণ্টা)", "Coding", "Morning"),
-    ("High-Protein Screenless Breakfast — স্ক্রিন ছাড়া পুষ্টিকর নাস্তা খাওয়া", "Health", "Morning"),
-    ("Plan the day — write your MIT — দিনের পরিকল্পনা ও প্রধান কাজ নির্ধারণ", "Mental", "Morning"),
+    # ─── Outcompete Framework: Non-Negotiable Daily Habits ───
 
-    # 💻 Work Routine — কাজের রুটিন
-    ("Deep Work Block 1 (Hard Code) — কঠিন কোডিং ও লজিক সমাধান", "Coding", "Work"),
-    ("Reactive Tasks Window — ইমেইল, মেসেজ ও কোড রিভিউ চেক করার সময়", "Coding", "Work"),
-    ("Disconnect & Walk Lunch — মোবাইল-ল্যাপটপ ছাড়া দুপুরের খাবার ও হাঁটা", "Health", "Work"),
-    ("Project / Build Time — পার্সোনাল প্রজেক্ট বা নতুন কিছু বিল্ড করার সময়", "Coding", "Work"),
-    ("Shutdown Ritual executed — দিনের কাজ শেষ করার রিল্যাক্সিং রুটিন", "Mental", "Work"),
+    # 🌅 Morning
+    ("Plan 3 Top Priorities (Eat the Frog) — সকালে ৩টি সবচেয়ে গুরুত্বপূর্ণ কাজ ঠিক করুন", "Mental", "Morning"),
+    ("Phone-Free First Hour — ঘুম থেকে উঠে প্রথম ১ ঘণ্টা ফোন ছাড়া থাকুন", "Mental", "Morning"),
 
-    # 💪 Fitness Routine — শারীরিক ব্যায়াম
-    ("Post-Work Decompression Walk — কাজ শেষে মাথা ফ্রেশ করার জন্য হাঁটা", "Health", "Fitness"),
-    ("Posterior Chain / Strength Training — পিঠ, কোমর ও শারীরিক শক্তির ব্যায়াম", "Health", "Fitness"),
-    ("Wrist & posture stretch — কব্জি এবং বসার ভঙ্গি বা পোস্টার স্ট্রেচিং", "Health", "Fitness"),
+    # 💻 Work / Focus
+    ("60-90 Min Deep Work Block — নীরব ফোন, কোনো বাধা ছাড়া গভীর মনোযোগে কাজ", "Coding", "Work"),
+    ("Complete the Hardest Task First — দিনের সবচেয়ে কঠিন কাজটি আগে শেষ করুন", "Coding", "Work"),
 
-    # 📖 Learning — পড়ালেখা
-    ("Read 5 pages of a book — প্রতিদিন ৫ পৃষ্ঠা বই পাঠ", "Mental", "Learning"),  # <-- এখানে যুক্ত করা হয়েছে
-    ("Read technical book — 30 min — টেকনিক্যাল বই পড়া (৩০ মিনিট)", "Coding", "Learning"),
-    ("Write or post about what you learned — যা শিখলেন তা নিয়ে পোস্ট করা", "Coding", "Learning"),
+    # 📖 Learning
+    ("30-60 Min Quality Learning — Business, Psychology, Tech বা Finance বই পড়ুন", "Mental", "Learning"),
+    ("Share / Teach One Thing Learned Today — আজ যা শিখলেন তা একজনকে শেখান বা শেয়ার করুন", "Coding", "Learning"),
 
-    # 🌙 Night Routine — রাতের রুটিন
-    ("Digital Sunset @ 9:00 PM — রাত ৯:০০ টায় সব ডিভাইস/স্ক্রিন বন্ধ করা", "Mental", "Night"),
-    ("Night reflection — 3 questions — রাতের আত্মচিন্তন (৩টি প্রশ্ন)", "Mental", "Night"),
-    ("In bed by 10:15 PM — রাত ১০:১৫ এর মধ্যে বিছানায় যাওয়া", "Health", "Night"),
+    # 💪 Fitness & Health
+    ("25-30 Min Physical Exercise — হাঁটা, জগিং বা পুশ-আপ করুন", "Health", "Fitness"),
+    ("10-15 Min Meditation / Stillness — ধ্যান বা চুপচাপ বসে মন শান্ত করুন", "Mental", "Fitness"),
+
+    # 🤝 Networking & Comms
+    ("Send One Important Email / Message on Time — সময়মতো একটি গুরুত্বপূর্ণ বার্তা পাঠান", "Mental", "Work"),
+    ("Send a Thank-You or Networking Message — একজন পরিচিতকে ধন্যবাদ বা নেটওয়ার্কিং বার্তা পাঠান", "Mental", "Work"),
+
+    # 🌙 Night / Review
+    ("7-8 Hours Quality Sleep Setup — রাত ১০:৩০ এর মধ্যে ঘুমের প্রস্তুতি নিন", "Health", "Night"),
+    ("Limit Low-Quality Social Media / Scrolling — অর্থহীন স্ক্রলিং সীমিত রাখুন", "Mental", "Night"),
 ]
 
 def seed_habits(db, uid):
@@ -858,15 +1078,24 @@ def get_goals(uid, timeframe=None, status="active"):
             (uid, status),
         ).fetchall()
 
-def save_journal(uid, date, q1, q2, q3, bd, mood, energy):
+def save_journal(uid, date, q1, q2, q3, bd, mood, energy,
+                  nightly_review="", tomorrow_plan="", info_capture="",
+                  mindset_risk=0, mindset_compare=0):
     with conn() as db:
         db.execute("""
-            INSERT INTO journal_entries (user_id,date,q1,q2,q3,brain_dump,mood,energy)
-            VALUES (?,?,?,?,?,?,?,?)
+            INSERT INTO journal_entries
+              (user_id,date,q1,q2,q3,brain_dump,mood,energy,
+               nightly_review,tomorrow_plan,info_capture,mindset_risk,mindset_compare)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(user_id,date) DO UPDATE SET
             q1=excluded.q1,q2=excluded.q2,q3=excluded.q3,
-            brain_dump=excluded.brain_dump,mood=excluded.mood,energy=excluded.energy
-        """, (uid, date, q1, q2, q3, bd, mood, energy))
+            brain_dump=excluded.brain_dump,mood=excluded.mood,energy=excluded.energy,
+            nightly_review=excluded.nightly_review,tomorrow_plan=excluded.tomorrow_plan,
+            info_capture=excluded.info_capture,mindset_risk=excluded.mindset_risk,
+            mindset_compare=excluded.mindset_compare
+        """, (uid, date, q1, q2, q3, bd, mood, energy,
+              nightly_review, tomorrow_plan, info_capture,
+              int(mindset_risk), int(mindset_compare)))
 
 def get_journal(uid, date):
     with conn() as db:
@@ -874,15 +1103,20 @@ def get_journal(uid, date):
             "SELECT * FROM journal_entries WHERE user_id=? AND date=?", (uid, date)
         ).fetchone()
 
-def save_metrics(uid, date, dw, code, ex, sl):
+def save_metrics(uid, date, dw, code, ex, sl,
+                  quick_decisions=5, focus_pct=50, one_pct_better=50):
     with conn() as db:
         db.execute("""
-            INSERT INTO daily_metrics (user_id,date,deep_work_hrs,coding_hrs,exercise_mins,sleep_hrs)
-            VALUES (?,?,?,?,?,?)
+            INSERT INTO daily_metrics
+              (user_id,date,deep_work_hrs,coding_hrs,exercise_mins,sleep_hrs,
+               quick_decisions,focus_pct,one_pct_better)
+            VALUES (?,?,?,?,?,?,?,?,?)
             ON CONFLICT(user_id,date) DO UPDATE SET
             deep_work_hrs=excluded.deep_work_hrs,coding_hrs=excluded.coding_hrs,
-            exercise_mins=excluded.exercise_mins,sleep_hrs=excluded.sleep_hrs
-        """, (uid, date, dw, code, ex, sl))
+            exercise_mins=excluded.exercise_mins,sleep_hrs=excluded.sleep_hrs,
+            quick_decisions=excluded.quick_decisions,focus_pct=excluded.focus_pct,
+            one_pct_better=excluded.one_pct_better
+        """, (uid, date, dw, code, ex, sl, quick_decisions, focus_pct, one_pct_better))
 
 def get_metrics_df(uid, days=30):
     since = (datetime.date.today() - datetime.timedelta(days=days)).isoformat()
@@ -1008,7 +1242,7 @@ def page_auth():
 
 
 # ──────────────────────────────────────────────────────────────
-#  SIDEBAR
+#  OFF-CANVAS DRAWER  (replaces native Streamlit sidebar)
 # ──────────────────────────────────────────────────────────────
 def render_sidebar():
     uid   = st.session_state.user_id
@@ -1027,111 +1261,181 @@ def render_sidebar():
     is_admin_user = bool(u_row and u_row["is_admin"])
     st.session_state.is_admin = is_admin_user
 
-    with st.sidebar:
-        # ── Logo / branding ──
-        st.markdown("""
-        <div style="padding:16px 0 10px;text-align:center">
-            <div style="font-size:2.2rem;margin-bottom:4px">⚡</div>
-            <div class="logo-text">DevLife OS</div>
-            <div class="logo-sub">Developer Success System</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # ── Nav items ──
+    nav_items = [
+        t("nav_dashboard"),
+        t("nav_daily"),
+        t("nav_goals"),
+        t("nav_habits"),
+        t("nav_reviews"),
+        t("nav_skills"),
+        t("nav_finance"),
+        t("nav_profile"),
+    ]
+    if is_admin_user:
+        nav_items.append(t("nav_admin"))
 
-        # ── User card ──
-        admin_badge = '<span class="admin-badge">ADMIN</span>' if is_admin_user else ""
-        st.markdown(f"""
-        <div class="sb-user-card">
-            <div style="font-size:.9rem;font-weight:700;color:#dce7f3">
-                👤 {uname}{admin_badge}
-            </div>
-            <div style="font-size:.73rem;color:#475569;margin-top:3px">
-                {st.session_state.role}
-            </div>
-            <div style="font-size:.7rem;color:#38bdf8;margin-top:2px">
-                {st.session_state.stack[:35]}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    # ── Resolve current page from query params ──
+    qp = st.query_params.get("page", "")
+    # Map query param back to a nav label
+    PAGE_KEYWORDS = {
+        t("nav_dashboard"):  ["dashboard", "\u09a1\u09cd\u09af\u09be\u09b6\u09ac\u09cb\u09b0\u09cd\u09a1"],
+        t("nav_daily"):      ["daily", "routine", "\u09a6\u09c8\u09a8\u09a8\u09cd\u09a6\u09bf\u09a8", "\u09b0\u09c1\u099f\u09bf\u09a8"],
+        t("nav_goals"):      ["goal", "\u09b2\u0995\u09cd\u09b7\u09cd\u09af"],
+        t("nav_habits"):     ["habit", "\u0985\u09ad\u09cd\u09af\u09be\u09b8"],
+        t("nav_reviews"):    ["review", "\u09aa\u09b0\u09cd\u09af\u09be\u09b2\u09cb\u099a\u09a8\u09be"],
+        t("nav_skills"):     ["skill", "roadmap", "\u09a6\u0995\u09cd\u09b7\u09a4\u09be"],
+        t("nav_finance"):    ["finance", "\u0986\u09b0\u09cd\u09a5\u09bf\u0995"],
+        t("nav_profile"):    ["profile", "\u09aa\u09cd\u09b0\u09cb\u09ab\u09be\u0987\u09b2"],
+        t("nav_admin"):      ["admin", "\u0985\u09cd\u09af\u09be\u09a1\u09ae\u09bf\u09a8"],
+    }
+    selected_label = nav_items[0]  # default
+    if qp:
+        for label, kws in PAGE_KEYWORDS.items():
+            if any(kw in qp.lower() for kw in kws):
+                if label in nav_items:
+                    selected_label = label
+                break
 
-        # ── Today's progress ──
-        st.markdown(f"""
-        <div class="sb-progress">
-            <div style="font-size:.62rem;color:#475569;letter-spacing:1px;
-                        text-transform:uppercase;margin-bottom:2px">Today</div>
-            <div style="display:flex;align-items:center;gap:8px">
-                <div style="font-size:1.5rem;font-weight:800;color:{bar_color};line-height:1">{pct:.0f}%</div>
-                <div style="flex:1">
-                    <div style="background:#1a2540;border-radius:99px;height:5px;overflow:hidden">
-                        <div style="height:100%;border-radius:99px;background:{bar_color};
-                                    width:{pct:.0f}%"></div>
-                    </div>
-                    <div style="font-size:.65rem;color:#475569;margin-top:2px">{done}/{total} habits</div>
+    # ── Mini quote for drawer ──
+    qt, qa, _ = random_quote_by_cat("Mindset")
+    quote_snippet = qt[:90] + "…"
+
+    # ── Admin badge HTML ──
+    admin_badge_html = '<span style="display:inline-block;background:linear-gradient(90deg,#f87171,#fbbf24);color:#080c14;font-size:.55rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:1px 6px;border-radius:99px;margin-left:5px;vertical-align:middle">ADMIN</span>' if is_admin_user else ""
+
+    # ── Build nav buttons HTML ──
+    nav_buttons_html = ""
+    for item in nav_items:
+        active_cls = "active" if item == selected_label else ""
+        # encode item as a URL-safe key
+        item_key = item.replace(" ", "_").replace("/", "_")
+        nav_buttons_html += f'''<button class="dv-drawer-nav-item {active_cls}"
+            onclick="dvSetPage(\'{item_key}\')">{item}</button>\n'''
+
+    # ── Language toggle ──
+    lang_val = st.session_state.get("lang", "en")
+
+    # ── Full drawer HTML + JS ──
+    drawer_html = f"""
+<div id="dv-drawer-overlay" onclick="dvCloseDrawer()"></div>
+
+<button id="dv-drawer-toggle" onclick="dvToggleDrawer()" title="Menu" aria-label="Toggle navigation">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+</button>
+
+<div id="dv-drawer">
+    <!-- Logo -->
+    <div class="dv-drawer-logo">
+        <div style="font-size:2rem;margin-bottom:4px">⚡</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#38bdf8;letter-spacing:-.5px">DevLife OS</div>
+        <div style="font-size:.65rem;color:#475569;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px">Developer Success System</div>
+    </div>
+
+    <!-- User card -->
+    <div class="dv-drawer-user">
+        <div style="font-size:.88rem;font-weight:700;color:#dce7f3">
+            👤 {uname}{admin_badge_html}
+        </div>
+        <div style="font-size:.72rem;color:#475569;margin-top:3px">{st.session_state.role}</div>
+        <div style="font-size:.68rem;color:#38bdf8;margin-top:2px">{st.session_state.stack[:35]}</div>
+    </div>
+
+    <!-- Today's progress -->
+    <div class="dv-drawer-progress">
+        <div style="font-size:.6rem;color:#475569;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Today</div>
+        <div style="display:flex;align-items:center;gap:8px">
+            <div style="font-size:1.4rem;font-weight:800;color:{bar_color};line-height:1">{pct:.0f}%</div>
+            <div style="flex:1">
+                <div style="background:#1a2540;border-radius:99px;height:5px;overflow:hidden">
+                    <div style="height:100%;border-radius:99px;background:{bar_color};width:{pct:.0f}%"></div>
                 </div>
+                <div style="font-size:.63rem;color:#475569;margin-top:2px">{done}/{total} habits</div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
 
-        st.markdown("---")
+    <hr class="dv-drawer-divider">
 
-        # ── Language toggle (compact) ──
-        lang_choice = st.radio(
-            "🌐",
-            ["EN", "বাং"],
-            index=0 if st.session_state.get("lang", "en") == "en" else 1,
-            horizontal=True,
-            key="lang_radio",
-        )
-        st.session_state.lang = "en" if lang_choice == "EN" else "bn"
+    <!-- Nav -->
+    <div class="dv-drawer-section-label">Menu</div>
+    <div class="dv-drawer-nav">
+        {nav_buttons_html}
+    </div>
 
-        st.markdown("---")
+    <hr class="dv-drawer-divider">
 
-        # ── Navigation ──
-        st.markdown('<div style="font-size:.62rem;color:#475569;letter-spacing:1.2px;'
-                    'text-transform:uppercase;margin-bottom:4px;padding-left:4px">Menu</div>',
-                    unsafe_allow_html=True)
+    <!-- Mini quote -->
+    <div class="dv-drawer-quote">
+        <div style="font-size:.7rem;color:#94a3b8;font-style:italic;line-height:1.55">"{quote_snippet}"</div>
+        <div style="font-size:.63rem;color:#38bdf8;margin-top:4px;font-weight:600">— {qa}</div>
+    </div>
 
-        nav_items = [
-            t("nav_dashboard"),
-            t("nav_daily"),
-            t("nav_goals"),
-            t("nav_habits"),
-            t("nav_reviews"),
-            t("nav_skills"),
-            t("nav_finance"),
-            t("nav_profile"),
-        ]
-        if is_admin_user:
-            nav_items.append(t("nav_admin"))
+    <!-- Logout -->
+    <button class="dv-drawer-logout" onclick="dvLogout()">🚪 Logout</button>
+</div>
 
-        selected = st.radio(
-            "Navigate",
-            nav_items,
-            label_visibility="collapsed",
-            key="main_nav_radio",
-        )
-        st.session_state.last_page = selected
+<script>
+(function() {{
+    // ── State ──
+    var isOpen = false;
 
-        st.markdown("---")
+    function dvToggleDrawer() {{
+        isOpen ? dvCloseDrawer() : dvOpenDrawer();
+    }}
+    function dvOpenDrawer() {{
+        isOpen = true;
+        document.getElementById('dv-drawer').classList.add('open');
+        document.getElementById('dv-drawer-toggle').classList.add('open');
+        document.getElementById('dv-drawer-overlay').classList.add('visible');
+    }}
+    function dvCloseDrawer() {{
+        isOpen = false;
+        document.getElementById('dv-drawer').classList.remove('open');
+        document.getElementById('dv-drawer-toggle').classList.remove('open');
+        document.getElementById('dv-drawer-overlay').classList.remove('visible');
+    }}
+    function dvSetPage(pageKey) {{
+        dvCloseDrawer();
+        // Update URL query param — Streamlit will re-run and pick it up
+        var url = new URL(window.location.href);
+        url.searchParams.set('page', pageKey);
+        window.location.href = url.toString();
+    }}
+    function dvLogout() {{
+        dvCloseDrawer();
+        var url = new URL(window.location.href);
+        url.searchParams.set('page', '__logout__');
+        window.location.href = url.toString();
+    }}
 
-        # ── Mini motivational quote ──
-        qt, qa, _ = random_quote_by_cat("Mindset")
-        st.markdown(f"""
-        <div class="sb-quote">
-            <div style="font-size:.71rem;color:#94a3b8;font-style:italic;
-                        line-height:1.55">"{qt[:100]}…"</div>
-            <div style="font-size:.64rem;color:#38bdf8;margin-top:5px;font-weight:600">— {qa}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    // Expose to global scope (onclick attributes need it)
+    window.dvToggleDrawer = dvToggleDrawer;
+    window.dvOpenDrawer   = dvOpenDrawer;
+    window.dvCloseDrawer  = dvCloseDrawer;
+    window.dvSetPage      = dvSetPage;
+    window.dvLogout       = dvLogout;
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {{
+        if (e.key === 'Escape') dvCloseDrawer();
+    }});
+}})();
+</script>
+"""
 
-        # ── Logout ──
-        if st.button(t("logout"), use_container_width=True, key="logout_btn"):
-            for k in list(st.session_state.keys()):
-                del st.session_state[k]
-            st.rerun()
+    st.html(drawer_html)
 
-    return selected.strip()
+    # ── Handle logout via query param ──
+    if st.query_params.get("page", "") == "__logout__":
+        st.query_params.clear()
+        for k in list(st.session_state.keys()):
+            del st.session_state[k]
+        st.rerun()
+
+    return selected_label.strip()
 
 
 # ──────────────────────────────────────────────────────────────
@@ -1229,8 +1533,13 @@ def page_dashboard():
             cd = st.slider(t("coding_hrs"),    0.0, 12.0, 3.0, 0.5)
             ex = st.slider(t("exercise_min"),  0, 180, 30, 5)
             sl = st.slider(t("sleep_hrs"),     4.0, 10.0, 7.5, 0.25)
-            if st.form_submit_button(t("save"), use_container_width=True):
-                save_metrics(uid, today_str, dw, cd, ex, sl)
+            opb_dash = st.slider(t("one_pct_better"), 1, 100, 50,
+                                 help="How much 1% better are you today?")
+            st.markdown('<div class="btn-gold">', unsafe_allow_html=True)
+            saved_ql = st.form_submit_button(t("save"), use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            if saved_ql:
+                save_metrics(uid, today_str, dw, cd, ex, sl, one_pct_better=opb_dash)
                 st.success(t("saved"))
 
 
@@ -1271,26 +1580,108 @@ def page_daily():
                         st.rerun()
 
     with tab2:
-        section(t("journal_title"))
+        st.markdown(f'''<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="font-size:1.3rem">📝</span>
+            <span style="font-size:1.1rem;font-weight:800;color:#dce7f3">{t("journal_title")}</span>
+        </div>''', unsafe_allow_html=True)
         ex = get_journal(uid, sel_str)
 
-        # Quote for journaling context
+        # Motivational quote
         qt, qa, qc = random_quote_by_cat("Mindset")
         st.markdown(quote_card(qt, qa, qc), unsafe_allow_html=True)
 
         with st.form("journal_form"):
-            c1, c2 = st.columns(2)
-            with c1:
-                q1 = st.text_area(t("q1"), value=ex["q1"] if ex else "", height=90)
-                q2 = st.text_area(t("q2"), value=ex["q2"] if ex else "", height=90)
-                q3 = st.text_area(t("q3"), value=ex["q3"] if ex else "", height=90)
-            with c2:
-                bd = st.text_area(t("brain_dump"), value=ex["brain_dump"] if ex else "", height=200)
+            # ── Section A: Nightly Review ──
+            st.markdown('''<div class="oc-section oc-section-fire">
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:1.4px;
+                            text-transform:uppercase;color:#f43127;margin-bottom:10px">
+                    🌙 Nightly Review — দিন শেষের হিসাব
+                </div>''', unsafe_allow_html=True)
+            nr_val = ex["nightly_review"] if ex and ex["nightly_review"] else ""
+            nightly_review = st.text_area(
+                t("j_accomplished"),
+                value=nr_val, height=90,
+                placeholder="I shipped the auth module, fixed 2 bugs, reviewed 3 PRs…",
+            )
+            imp_val = ex["q3"] if ex and ex["q3"] else ""
+            q3 = st.text_area(
+                t("j_improve"),
+                value=imp_val, height=80,
+                placeholder="Tomorrow I need to focus more on deep work before checking messages…",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── Section B: Tomorrow's Plan ──
+            st.markdown('''<div class="oc-section oc-section-gold">
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:1.4px;
+                            text-transform:uppercase;color:#fcb302;margin-bottom:10px">
+                    🎯 Tomorrow's Plan — আগের রাতের পরিকল্পনা
+                </div>''', unsafe_allow_html=True)
+            tp_val = ex["tomorrow_plan"] if ex and ex["tomorrow_plan"] else ""
+            tomorrow_plan = st.text_area(
+                t("j_tomorrow_plan"),
+                value=tp_val, height=90,
+                placeholder="1. Complete the payment API\n2. Write unit tests\n3. Review team PRs",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── Section C: Information Capture ──
+            st.markdown('''<div class="oc-section oc-section-teal">
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:1.4px;
+                            text-transform:uppercase;color:#2dd4bf;margin-bottom:10px">
+                    🔗 Information Capture
+                </div>''', unsafe_allow_html=True)
+            ic_val = ex["info_capture"] if ex and ex["info_capture"] else ""
+            info_capture = st.text_area(
+                t("j_capture"),
+                value=ic_val, height=80,
+                placeholder="https://... | Learned: async generators in Python | Task: update README",
+            )
+            bd_val = ex["brain_dump"] if ex and ex["brain_dump"] else ""
+            bd = st.text_area(
+                t("brain_dump"),
+                value=bd_val, height=80,
+                placeholder="Any ideas, random thoughts, things on your mind…",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── Section D: Mood, Energy & Mindset Check ──
+            st.markdown('''<div class="oc-section oc-section-blue">
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:1.4px;
+                            text-transform:uppercase;color:#38bdf8;margin-bottom:10px">
+                    🧠 Mindset Check + Vitals
+                </div>''', unsafe_allow_html=True)
             mc, ec = st.columns(2)
             mood   = mc.slider(t("mood"),   1, 10, int(ex["mood"])   if ex else 7)
             energy = ec.slider(t("energy"), 1, 10, int(ex["energy"]) if ex else 7)
-            if st.form_submit_button(t("commit_journal"), use_container_width=True):
-                save_journal(uid, sel_str, q1, q2, q3, bd, mood, energy)
+
+            # Gratitude (q1) and focus problem (q2) kept as compact fields
+            gc, fc = st.columns(2)
+            q1_val = ex["q1"] if ex and ex["q1"] else ""
+            q2_val = ex["q2"] if ex and ex["q2"] else ""
+            q1 = gc.text_area(t("q1"), value=q1_val, height=70,
+                               placeholder="I am grateful for…")
+            q2 = fc.text_area(t("q2"), value=q2_val, height=70,
+                               placeholder="The one technical problem I must solve…")
+
+            # Mindset checkboxes
+            risk_default    = bool(ex["mindset_risk"])    if ex else False
+            compare_default = bool(ex["mindset_compare"]) if ex else False
+            mindset_risk    = st.checkbox(t("j_risk"),    value=risk_default)
+            mindset_compare = st.checkbox(t("j_compare"), value=compare_default)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── Save button — fire accent ──
+            st.markdown('<div class="btn-fire">', unsafe_allow_html=True)
+            submitted = st.form_submit_button(t("j_save"), use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            if submitted:
+                save_journal(uid, sel_str, q1, q2, q3, bd, mood, energy,
+                             nightly_review=nightly_review,
+                             tomorrow_plan=tomorrow_plan,
+                             info_capture=info_capture,
+                             mindset_risk=mindset_risk,
+                             mindset_compare=mindset_compare)
                 st.success(t("journal_saved"))
 
     with tab3:
@@ -1299,16 +1690,83 @@ def page_daily():
             em = db.execute(
                 "SELECT * FROM daily_metrics WHERE user_id=? AND date=?", (uid, sel_str)
             ).fetchone()
+
+        def _em(col, default):
+            try:
+                return em[col] if em and em[col] is not None else default
+            except (IndexError, KeyError):
+                return default
+
         with st.form("metrics_form"):
+            # ── Core performance ──
+            st.markdown('''<div class="oc-section oc-section-blue">
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:1.4px;
+                            text-transform:uppercase;color:#38bdf8;margin-bottom:10px">
+                    ⏱ Core Performance
+                </div>''', unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             with c1:
-                dw   = st.number_input(t("deep_work_hrs"), 0.0, 16.0, float(em["deep_work_hrs"])  if em else 0.0, 0.5)
-                code = st.number_input(t("coding_hrs"),    0.0, 16.0, float(em["coding_hrs"])     if em else 0.0, 0.5)
+                dw   = st.number_input(t("deep_work_hrs"), 0.0, 16.0, float(_em("deep_work_hrs", 0.0)), 0.5)
+                code = st.number_input(t("coding_hrs"),    0.0, 16.0, float(_em("coding_hrs",    0.0)), 0.5)
             with c2:
-                ex   = st.number_input(t("exercise_min"),  0,   300,  int(em["exercise_mins"])    if em else 0,   5)
-                sl   = st.number_input(t("sleep_hrs"),     0.0, 12.0, float(em["sleep_hrs"])      if em else 7.0, 0.25)
-            if st.form_submit_button(t("save_metrics_btn"), use_container_width=True):
-                save_metrics(uid, sel_str, dw, code, ex, sl)
+                ex_v = st.number_input(t("exercise_min"),  0,   300,  int(_em("exercise_mins",   0)),   5)
+                sl   = st.number_input(t("sleep_hrs"),     0.0, 12.0, float(_em("sleep_hrs",     7.0)), 0.25)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── Deep Work & Execution quality ──
+            st.markdown('''<div class="oc-section oc-section-fire">
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:1.4px;
+                            text-transform:uppercase;color:#f43127;margin-bottom:10px">
+                    🔥 Deep Work & Execution Quality
+                </div>''', unsafe_allow_html=True)
+            qd = st.slider(
+                t("quick_decisions"), 1, 10, int(_em("quick_decisions", 5)),
+                help="How many quick, decisive decisions did you make today without overthinking?",
+            )
+            fp = st.slider(
+                t("focus_vs_distract"), 0, 100, int(_em("focus_pct", 50)),
+                help="Estimate: what % of your work time was truly focused vs distracted/complaining?",
+            )
+            # Visual focus bar
+            fp_color = "#34d399" if fp >= 70 else "#fcb302" if fp >= 40 else "#f43127"
+            st.markdown(
+                f'''<div style="background:#111c30;border-radius:99px;height:8px;overflow:hidden;margin:4px 0 8px">
+                    <div style="height:100%;border-radius:99px;background:{fp_color};width:{fp}%"></div>
+                </div>
+                <small style="color:#475569">{fp}% focused execution</small>''',
+                unsafe_allow_html=True,
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── 1% Better tracker ──
+            st.markdown('''<div class="oc-section oc-section-gold">
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:1.4px;
+                            text-transform:uppercase;color:#fcb302;margin-bottom:10px">
+                    📈 1% Better Daily Growth
+                </div>''', unsafe_allow_html=True)
+            opb = st.slider(
+                t("one_pct_better"), 1, 100, int(_em("one_pct_better", 50)),
+                help="On a scale of 1-100, how much better are you today vs yesterday?",
+            )
+            opb_color = "#34d399" if opb >= 70 else "#fcb302" if opb >= 40 else "#f43127"
+            st.markdown(
+                f'''<div style="background:#111c30;border-radius:99px;height:8px;overflow:hidden;margin:4px 0 8px">
+                    <div style="height:100%;border-radius:99px;
+                                background:linear-gradient(90deg,#f43127,#fcb302,{opb_color});
+                                width:{opb}%"></div>
+                </div>
+                <small style="color:#475569">{opb}/100 — 1% better today</small>''',
+                unsafe_allow_html=True,
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── Save button — gold accent ──
+            st.markdown('<div class="btn-gold">', unsafe_allow_html=True)
+            submitted_m = st.form_submit_button(t("save_metrics_btn"), use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            if submitted_m:
+                save_metrics(uid, sel_str, dw, code, ex_v, sl,
+                             quick_decisions=qd, focus_pct=fp, one_pct_better=opb)
                 st.success(t("saved"))
 
 
@@ -2064,18 +2522,20 @@ def main():
     selected = render_sidebar()  # always returns the currently selected nav label
 
     # Map nav label → page key via keyword matching (works for EN + BN)
+    # Map query param → page key
     PAGE_KEYWORDS = {
-        "Dashboard":        ["dashboard", "ড্যাশবোর্ড"],
-        "Daily Routine":    ["daily", "routine", "দৈনন্দিন", "রুটিন"],
-        "Goals":            ["goal", "লক্ষ্য"],
-        "Habits":           ["habit", "অভ্যাস"],
-        "Reviews":          ["review", "পর্যালোচনা"],
-        "Skills & Roadmap": ["skill", "roadmap", "দক্ষতা", "রোডম্যাপ"],
-        "Finance Tips":     ["finance", "আর্থিক"],
-        "Profile":          ["profile", "প্রোফাইল"],
-        "Admin":            ["admin", "অ্যাডমিন"],
+        "Dashboard":        ["dashboard"],
+        "Daily Routine":    ["daily", "routine"],
+        "Goals":            ["goal"],
+        "Habits":           ["habit"],
+        "Reviews":          ["review"],
+        "Skills & Roadmap": ["skill", "roadmap"],
+        "Finance Tips":     ["finance"],
+        "Profile":          ["profile"],
+        "Admin":            ["admin"],
     }
-    sel_lower = (selected or "").lower()
+    qp = st.query_params.get("page", "")
+    sel_lower = (qp or selected or "").lower().replace("_", " ")
     matched = "Dashboard"
     for page, keywords in PAGE_KEYWORDS.items():
         if any(kw in sel_lower for kw in keywords):
