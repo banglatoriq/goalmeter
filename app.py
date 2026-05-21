@@ -4,6 +4,7 @@
 # ╚══════════════════════════════════════════════════════════════╝
 
 import streamlit as st
+import streamlit.components.v1 as components
 import sqlite3
 import hashlib
 import datetime
@@ -205,179 +206,10 @@ hr { border-color: #1a2540 !important; }
 #MainMenu, footer, header { visibility: hidden; }
 
 /* ── Hide native Streamlit sidebar completely ── */
-section[data-testid="stSidebar"] {
-    display: none !important;
-}
+section[data-testid="stSidebar"] { display: none !important; }
 button[data-testid="collapsedControl"],
-[data-testid="collapsedControl"] {
-    display: none !important;
-}
-/* Main content takes full width */
-.main .block-container {
-    padding-left: 1rem !important;
-    max-width: 100% !important;
-}
-
-/* ── Hamburger toggle button (fixed top-left) ── */
-#dv-drawer-toggle {
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    z-index: 99999;
-    width: 42px;
-    height: 42px;
-    background: #0d1627;
-    border: 1px solid #1e2d48;
-    border-radius: 10px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    transition: background .2s ease, box-shadow .2s ease;
-    box-shadow: 0 2px 12px rgba(0,0,0,.4);
-}
-#dv-drawer-toggle:hover {
-    background: #1e2d48;
-    box-shadow: 0 0 16px rgba(56,189,248,.25);
-}
-#dv-drawer-toggle .bar {
-    width: 20px; height: 2px;
-    background: #38bdf8;
-    border-radius: 2px;
-    transition: all .25s ease;
-}
-#dv-drawer-toggle.open .bar:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
-}
-#dv-drawer-toggle.open .bar:nth-child(2) {
-    opacity: 0; transform: scaleX(0);
-}
-#dv-drawer-toggle.open .bar:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
-}
-
-/* ── Overlay backdrop ── */
-#dv-drawer-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.55);
-    z-index: 99997;
-    backdrop-filter: blur(2px);
-    transition: opacity .3s ease;
-}
-#dv-drawer-overlay.visible { display: block; }
-
-/* ── Off-canvas drawer panel ── */
-#dv-drawer {
-    position: fixed;
-    top: 0; left: 0;
-    width: 270px;
-    height: 100vh;
-    background: linear-gradient(180deg, #0d1220 0%, #080c14 100%);
-    border-right: 1px solid #1a2540;
-    z-index: 99998;
-    transform: translateX(-100%);
-    transition: transform .3s cubic-bezier(.4,0,.2,1);
-    overflow-y: auto;
-    padding: 0 0 24px 0;
-    box-shadow: 4px 0 32px rgba(0,0,0,.6);
-}
-#dv-drawer.open {
-    transform: translateX(0);
-}
-/* Scrollbar inside drawer */
-#dv-drawer::-webkit-scrollbar { width: 4px; }
-#dv-drawer::-webkit-scrollbar-track { background: #080c14; }
-#dv-drawer::-webkit-scrollbar-thumb { background: #1e2d48; border-radius: 99px; }
-
-/* ── Drawer inner content ── */
-.dv-drawer-logo {
-    padding: 20px 0 12px;
-    text-align: center;
-    border-bottom: 1px solid #1a2540;
-    margin-bottom: 10px;
-}
-.dv-drawer-user {
-    background: #111c30;
-    border: 1px solid #1e2d48;
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin: 8px 14px 6px;
-}
-.dv-drawer-progress {
-    margin: 6px 14px 4px;
-    padding: 8px 10px;
-    background: #0a1020;
-    border-radius: 10px;
-    border: 1px solid #1a2540;
-}
-.dv-drawer-nav {
-    padding: 0 10px;
-    margin-top: 8px;
-}
-.dv-drawer-nav-item {
-    display: block;
-    width: 100%;
-    padding: 9px 12px;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    color: #c5d3e8;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    text-align: left;
-    transition: background .15s ease, color .15s ease;
-    font-family: 'Inter', sans-serif;
-    letter-spacing: .2px;
-    margin: 1px 0;
-}
-.dv-drawer-nav-item:hover {
-    background: #1e2d48;
-    color: #38bdf8;
-}
-.dv-drawer-nav-item.active {
-    background: #1e2d48;
-    color: #38bdf8;
-    font-weight: 600;
-}
-.dv-drawer-divider {
-    border: none;
-    border-top: 1px solid #1a2540;
-    margin: 10px 14px;
-}
-.dv-drawer-section-label {
-    font-size: .62rem;
-    color: #475569;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    padding: 4px 14px 2px;
-}
-.dv-drawer-quote {
-    background: #111c30;
-    border: 1px solid #1e2d48;
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin: 8px 14px 4px;
-}
-.dv-drawer-logout {
-    margin: 10px 14px 0;
-    width: calc(100% - 28px);
-    padding: 9px 12px;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    color: #f87171;
-    cursor: pointer;
-    border: 1px solid #4a1a1a;
-    background: #1a0d0d;
-    text-align: center;
-    transition: background .15s ease;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-}
-.dv-drawer-logout:hover { background: #2a1010; }
+[data-testid="collapsedControl"] { display: none !important; }
+.main .block-container { padding-left: 1rem !important; max-width: 100% !important; }
 
 /* ── Sidebar nav radio items — bigger click targets ── */
 section[data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
@@ -1242,7 +1074,7 @@ def page_auth():
 
 
 # ──────────────────────────────────────────────────────────────
-#  OFF-CANVAS DRAWER  (replaces native Streamlit sidebar)
+#  OFF-CANVAS DRAWER  (self-contained iframe via components.html)
 # ──────────────────────────────────────────────────────────────
 def render_sidebar():
     uid   = st.session_state.user_id
@@ -1263,33 +1095,27 @@ def render_sidebar():
 
     # ── Nav items ──
     nav_items = [
-        t("nav_dashboard"),
-        t("nav_daily"),
-        t("nav_goals"),
-        t("nav_habits"),
-        t("nav_reviews"),
-        t("nav_skills"),
-        t("nav_finance"),
-        t("nav_profile"),
+        t("nav_dashboard"), t("nav_daily"), t("nav_goals"),
+        t("nav_habits"), t("nav_reviews"), t("nav_skills"),
+        t("nav_finance"), t("nav_profile"),
     ]
     if is_admin_user:
         nav_items.append(t("nav_admin"))
 
     # ── Resolve current page from query params ──
     qp = st.query_params.get("page", "")
-    # Map query param back to a nav label
     PAGE_KEYWORDS = {
-        t("nav_dashboard"):  ["dashboard", "\u09a1\u09cd\u09af\u09be\u09b6\u09ac\u09cb\u09b0\u09cd\u09a1"],
-        t("nav_daily"):      ["daily", "routine", "\u09a6\u09c8\u09a8\u09a8\u09cd\u09a6\u09bf\u09a8", "\u09b0\u09c1\u099f\u09bf\u09a8"],
-        t("nav_goals"):      ["goal", "\u09b2\u0995\u09cd\u09b7\u09cd\u09af"],
-        t("nav_habits"):     ["habit", "\u0985\u09ad\u09cd\u09af\u09be\u09b8"],
-        t("nav_reviews"):    ["review", "\u09aa\u09b0\u09cd\u09af\u09be\u09b2\u09cb\u099a\u09a8\u09be"],
-        t("nav_skills"):     ["skill", "roadmap", "\u09a6\u0995\u09cd\u09b7\u09a4\u09be"],
-        t("nav_finance"):    ["finance", "\u0986\u09b0\u09cd\u09a5\u09bf\u0995"],
-        t("nav_profile"):    ["profile", "\u09aa\u09cd\u09b0\u09cb\u09ab\u09be\u0987\u09b2"],
-        t("nav_admin"):      ["admin", "\u0985\u09cd\u09af\u09be\u09a1\u09ae\u09bf\u09a8"],
+        t("nav_dashboard"):  ["dashboard"],
+        t("nav_daily"):      ["daily", "routine"],
+        t("nav_goals"):      ["goal"],
+        t("nav_habits"):     ["habit"],
+        t("nav_reviews"):    ["review"],
+        t("nav_skills"):     ["skill", "roadmap"],
+        t("nav_finance"):    ["finance"],
+        t("nav_profile"):    ["profile"],
+        t("nav_admin"):      ["admin"],
     }
-    selected_label = nav_items[0]  # default
+    selected_label = nav_items[0]
     if qp:
         for label, kws in PAGE_KEYWORDS.items():
             if any(kw in qp.lower() for kw in kws):
@@ -1297,144 +1123,305 @@ def render_sidebar():
                     selected_label = label
                 break
 
-    # ── Mini quote for drawer ──
-    qt, qa, _ = random_quote_by_cat("Mindset")
-    quote_snippet = qt[:90] + "…"
-
-    # ── Admin badge HTML ──
-    admin_badge_html = '<span style="display:inline-block;background:linear-gradient(90deg,#f87171,#fbbf24);color:#080c14;font-size:.55rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:1px 6px;border-radius:99px;margin-left:5px;vertical-align:middle">ADMIN</span>' if is_admin_user else ""
-
-    # ── Build nav buttons HTML ──
-    nav_buttons_html = ""
-    for item in nav_items:
-        active_cls = "active" if item == selected_label else ""
-        # encode item as a URL-safe key
-        item_key = item.replace(" ", "_").replace("/", "_")
-        nav_buttons_html += f'''<button class="dv-drawer-nav-item {active_cls}"
-            onclick="dvSetPage(\'{item_key}\')">{item}</button>\n'''
-
-    # ── Language toggle ──
-    lang_val = st.session_state.get("lang", "en")
-
-    # ── Full drawer HTML + JS ──
-    drawer_html = f"""
-<div id="dv-drawer-overlay" onclick="dvCloseDrawer()"></div>
-
-<button id="dv-drawer-toggle" onclick="dvToggleDrawer()" title="Menu" aria-label="Toggle navigation">
-    <div class="bar"></div>
-    <div class="bar"></div>
-    <div class="bar"></div>
-</button>
-
-<div id="dv-drawer">
-    <!-- Logo -->
-    <div class="dv-drawer-logo">
-        <div style="font-size:2rem;margin-bottom:4px">⚡</div>
-        <div style="font-size:1.15rem;font-weight:800;color:#38bdf8;letter-spacing:-.5px">DevLife OS</div>
-        <div style="font-size:.65rem;color:#475569;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px">Developer Success System</div>
-    </div>
-
-    <!-- User card -->
-    <div class="dv-drawer-user">
-        <div style="font-size:.88rem;font-weight:700;color:#dce7f3">
-            👤 {uname}{admin_badge_html}
-        </div>
-        <div style="font-size:.72rem;color:#475569;margin-top:3px">{st.session_state.role}</div>
-        <div style="font-size:.68rem;color:#38bdf8;margin-top:2px">{st.session_state.stack[:35]}</div>
-    </div>
-
-    <!-- Today's progress -->
-    <div class="dv-drawer-progress">
-        <div style="font-size:.6rem;color:#475569;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Today</div>
-        <div style="display:flex;align-items:center;gap:8px">
-            <div style="font-size:1.4rem;font-weight:800;color:{bar_color};line-height:1">{pct:.0f}%</div>
-            <div style="flex:1">
-                <div style="background:#1a2540;border-radius:99px;height:5px;overflow:hidden">
-                    <div style="height:100%;border-radius:99px;background:{bar_color};width:{pct:.0f}%"></div>
-                </div>
-                <div style="font-size:.63rem;color:#475569;margin-top:2px">{done}/{total} habits</div>
-            </div>
-        </div>
-    </div>
-
-    <hr class="dv-drawer-divider">
-
-    <!-- Nav -->
-    <div class="dv-drawer-section-label">Menu</div>
-    <div class="dv-drawer-nav">
-        {nav_buttons_html}
-    </div>
-
-    <hr class="dv-drawer-divider">
-
-    <!-- Mini quote -->
-    <div class="dv-drawer-quote">
-        <div style="font-size:.7rem;color:#94a3b8;font-style:italic;line-height:1.55">"{quote_snippet}"</div>
-        <div style="font-size:.63rem;color:#38bdf8;margin-top:4px;font-weight:600">— {qa}</div>
-    </div>
-
-    <!-- Logout -->
-    <button class="dv-drawer-logout" onclick="dvLogout()">🚪 Logout</button>
-</div>
-
-<script>
-(function() {{
-    // ── State ──
-    var isOpen = false;
-
-    function dvToggleDrawer() {{
-        isOpen ? dvCloseDrawer() : dvOpenDrawer();
-    }}
-    function dvOpenDrawer() {{
-        isOpen = true;
-        document.getElementById('dv-drawer').classList.add('open');
-        document.getElementById('dv-drawer-toggle').classList.add('open');
-        document.getElementById('dv-drawer-overlay').classList.add('visible');
-    }}
-    function dvCloseDrawer() {{
-        isOpen = false;
-        document.getElementById('dv-drawer').classList.remove('open');
-        document.getElementById('dv-drawer-toggle').classList.remove('open');
-        document.getElementById('dv-drawer-overlay').classList.remove('visible');
-    }}
-    function dvSetPage(pageKey) {{
-        dvCloseDrawer();
-        // Update URL query param — Streamlit will re-run and pick it up
-        var url = new URL(window.location.href);
-        url.searchParams.set('page', pageKey);
-        window.location.href = url.toString();
-    }}
-    function dvLogout() {{
-        dvCloseDrawer();
-        var url = new URL(window.location.href);
-        url.searchParams.set('page', '__logout__');
-        window.location.href = url.toString();
-    }}
-
-    // Expose to global scope (onclick attributes need it)
-    window.dvToggleDrawer = dvToggleDrawer;
-    window.dvOpenDrawer   = dvOpenDrawer;
-    window.dvCloseDrawer  = dvCloseDrawer;
-    window.dvSetPage      = dvSetPage;
-    window.dvLogout       = dvLogout;
-
-    // Close on Escape key
-    document.addEventListener('keydown', function(e) {{
-        if (e.key === 'Escape') dvCloseDrawer();
-    }});
-}})();
-</script>
-"""
-
-    st.html(drawer_html)
-
-    # ── Handle logout via query param ──
-    if st.query_params.get("page", "") == "__logout__":
+    # ── Handle logout ──
+    if qp == "__logout__":
         st.query_params.clear()
         for k in list(st.session_state.keys()):
             del st.session_state[k]
         st.rerun()
 
+    # ── Mini quote ──
+    qt, qa, _ = random_quote_by_cat("Mindset")
+    quote_snippet = qt[:88] + "…"
+
+    # ── Build nav items JSON for JS ──
+    import json
+    nav_json = json.dumps([
+        {"label": item, "key": item.replace(" ", "_").replace("/", "_"),
+         "active": item == selected_label}
+        for item in nav_items
+    ])
+
+    admin_badge = (
+        '<span style="display:inline-block;background:linear-gradient(90deg,#f87171,#fbbf24);'
+        'color:#080c14;font-size:.55rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;'
+        'padding:1px 6px;border-radius:99px;margin-left:5px;vertical-align:middle">ADMIN</span>'
+        if is_admin_user else ""
+    )
+
+    # ── Current page URL (passed to JS for navigation) ──
+    # We pass the base URL via a data attribute; JS reads window.location from inside the iframe
+    role_str  = st.session_state.role[:30]
+    stack_str = st.session_state.stack[:35]
+
+    drawer_component = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * {{ margin:0; padding:0; box-sizing:border-box; }}
+  body {{ background:transparent; font-family:'Inter',sans-serif; overflow:hidden; }}
+
+  /* ── Hamburger toggle — fixed top-left of viewport ── */
+  #toggle {{
+    position: fixed;
+    top: 14px; left: 14px;
+    width: 44px; height: 44px;
+    background: #0d1627;
+    border: 1px solid #1e2d48;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    z-index: 9999;
+    box-shadow: 0 2px 16px rgba(0,0,0,.5);
+    transition: background .2s, box-shadow .2s;
+  }}
+  #toggle:hover {{
+    background: #1e2d48;
+    box-shadow: 0 0 20px rgba(56,189,248,.3);
+  }}
+  .bar {{
+    width: 20px; height: 2px;
+    background: #38bdf8;
+    border-radius: 2px;
+    transition: transform .25s ease, opacity .25s ease;
+    transform-origin: center;
+  }}
+  #toggle.open .bar:nth-child(1) {{ transform: translateY(7px) rotate(45deg); }}
+  #toggle.open .bar:nth-child(2) {{ opacity: 0; transform: scaleX(0); }}
+  #toggle.open .bar:nth-child(3) {{ transform: translateY(-7px) rotate(-45deg); }}
+
+  /* ── Backdrop overlay ── */
+  #overlay {{
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(3px);
+    z-index: 9997;
+  }}
+  #overlay.visible {{ display: block; }}
+
+  /* ── Drawer panel ── */
+  #drawer {{
+    position: fixed;
+    top: 0; left: 0;
+    width: 270px;
+    height: 100vh;
+    background: linear-gradient(180deg, #0d1220 0%, #080c14 100%);
+    border-right: 1px solid #1a2540;
+    z-index: 9998;
+    transform: translateX(-100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+    padding-bottom: 24px;
+    box-shadow: 4px 0 32px rgba(0,0,0,.7);
+  }}
+  #drawer.open {{ transform: translateX(0); }}
+  #drawer::-webkit-scrollbar {{ width: 4px; }}
+  #drawer::-webkit-scrollbar-track {{ background: #080c14; }}
+  #drawer::-webkit-scrollbar-thumb {{ background: #1e2d48; border-radius: 99px; }}
+
+  /* ── Drawer sections ── */
+  .logo-area {{
+    padding: 20px 0 14px;
+    text-align: center;
+    border-bottom: 1px solid #1a2540;
+  }}
+  .logo-icon {{ font-size: 2rem; margin-bottom: 4px; }}
+  .logo-name {{ font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: -.5px; }}
+  .logo-sub  {{ font-size: .62rem; color: #475569; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }}
+
+  .user-card {{
+    background: #111c30;
+    border: 1px solid #1e2d48;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 10px 12px 6px;
+  }}
+  .user-name  {{ font-size: .88rem; font-weight: 700; color: #dce7f3; }}
+  .user-role  {{ font-size: .72rem; color: #475569; margin-top: 3px; }}
+  .user-stack {{ font-size: .68rem; color: #38bdf8; margin-top: 2px; }}
+
+  .progress-box {{
+    margin: 6px 12px 4px;
+    padding: 8px 10px;
+    background: #0a1020;
+    border-radius: 10px;
+    border: 1px solid #1a2540;
+  }}
+  .prog-label {{ font-size: .6rem; color: #475569; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }}
+  .prog-row   {{ display: flex; align-items: center; gap: 8px; }}
+  .prog-pct   {{ font-size: 1.4rem; font-weight: 800; line-height: 1; }}
+  .prog-track {{ flex: 1; background: #1a2540; border-radius: 99px; height: 5px; overflow: hidden; }}
+  .prog-fill  {{ height: 100%; border-radius: 99px; }}
+  .prog-count {{ font-size: .63rem; color: #475569; margin-top: 2px; }}
+
+  .divider {{ border: none; border-top: 1px solid #1a2540; margin: 10px 12px; }}
+
+  .section-label {{
+    font-size: .62rem; color: #475569;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    padding: 2px 14px 4px;
+  }}
+
+  .nav-area {{ padding: 0 8px; }}
+  .nav-btn {{
+    display: block; width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: .88rem; color: #c5d3e8;
+    cursor: pointer;
+    border: none; background: transparent;
+    text-align: left;
+    transition: background .15s, color .15s;
+    font-family: 'Inter', sans-serif;
+    margin: 1px 0;
+    letter-spacing: .2px;
+  }}
+  .nav-btn:hover  {{ background: #1e2d48; color: #38bdf8; }}
+  .nav-btn.active {{ background: #1e2d48; color: #38bdf8; font-weight: 600; }}
+
+  .quote-box {{
+    background: #111c30;
+    border: 1px solid #1e2d48;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 6px 12px 4px;
+  }}
+  .quote-text   {{ font-size: .7rem; color: #94a3b8; font-style: italic; line-height: 1.55; }}
+  .quote-author {{ font-size: .63rem; color: #38bdf8; margin-top: 4px; font-weight: 600; }}
+
+  .logout-btn {{
+    display: block;
+    width: calc(100% - 24px);
+    margin: 10px 12px 0;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: .88rem; color: #f87171;
+    cursor: pointer;
+    border: 1px solid #4a1a1a;
+    background: #1a0d0d;
+    text-align: center;
+    transition: background .15s;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }}
+  .logout-btn:hover {{ background: #2a1010; }}
+</style>
+</head>
+<body>
+
+<!-- Hamburger button -->
+<button id="toggle" title="Menu" aria-label="Toggle menu">
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+</button>
+
+<!-- Backdrop -->
+<div id="overlay"></div>
+
+<!-- Drawer -->
+<div id="drawer">
+  <div class="logo-area">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-name">DevLife OS</div>
+    <div class="logo-sub">Developer Success System</div>
+  </div>
+
+  <div class="user-card">
+    <div class="user-name">👤 {uname} {admin_badge}</div>
+    <div class="user-role">{role_str}</div>
+    <div class="user-stack">{stack_str}</div>
+  </div>
+
+  <div class="progress-box">
+    <div class="prog-label">Today</div>
+    <div class="prog-row">
+      <div class="prog-pct" style="color:{bar_color}">{pct:.0f}%</div>
+      <div style="flex:1">
+        <div class="prog-track">
+          <div class="prog-fill" style="background:{bar_color};width:{pct:.0f}%"></div>
+        </div>
+        <div class="prog-count">{done}/{total} habits</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <div class="section-label">Menu</div>
+  <div class="nav-area" id="nav-area"></div>
+  <hr class="divider">
+
+  <div class="quote-box">
+    <div class="quote-text">"{quote_snippet}"</div>
+    <div class="quote-author">— {qa}</div>
+  </div>
+
+  <button class="logout-btn" id="logout-btn">🚪 Logout</button>
+</div>
+
+<script>
+var NAV_ITEMS = {nav_json};
+var isOpen = false;
+
+// Build nav buttons
+var navArea = document.getElementById('nav-area');
+NAV_ITEMS.forEach(function(item) {{
+  var btn = document.createElement('button');
+  btn.className = 'nav-btn' + (item.active ? ' active' : '');
+  btn.textContent = item.label;
+  btn.addEventListener('click', function() {{ navigate(item.key); }});
+  navArea.appendChild(btn);
+}});
+
+function toggle() {{ isOpen ? close() : open(); }}
+
+function open() {{
+  isOpen = true;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('toggle').classList.add('open');
+  document.getElementById('overlay').classList.add('visible');
+}}
+
+function close() {{
+  isOpen = false;
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('toggle').classList.remove('open');
+  document.getElementById('overlay').classList.remove('visible');
+}}
+
+function navigate(pageKey) {{
+  close();
+  var url = new URL(window.parent.location.href);
+  url.searchParams.set('page', pageKey);
+  window.parent.location.href = url.toString();
+}}
+
+function logout() {{
+  close();
+  var url = new URL(window.parent.location.href);
+  url.searchParams.set('page', '__logout__');
+  window.parent.location.href = url.toString();
+}}
+
+document.getElementById('toggle').addEventListener('click', toggle);
+document.getElementById('overlay').addEventListener('click', close);
+document.getElementById('logout-btn').addEventListener('click', logout);
+
+document.addEventListener('keydown', function(e) {{
+  if (e.key === 'Escape') close();
+}});
+</script>
+</body>
+</html>"""
+
+    components.html(drawer_component, height=60, scrolling=False)
     return selected_label.strip()
 
 
