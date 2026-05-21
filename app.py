@@ -1108,27 +1108,10 @@ def render_sidebar():
     if is_admin_user:
         PAGE_MAP["admin"] = t("nav_admin")
 
-    # ── Active page (session state only — no URL changes) ──
+    # ── Active page from session state ──
     if "active_page" not in st.session_state:
         st.session_state.active_page = "dashboard"
     active = st.session_state.active_page
-
-    # ── Hidden nav buttons (zero-height container, invisible to user) ──
-    # Each button has a unique key. JS clicks them to trigger Streamlit reruns.
-    st.markdown(
-        '<div style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none">',
-        unsafe_allow_html=True,
-    )
-    for key in list(PAGE_MAP.keys()) + ["__logout__"]:
-        if st.button(f"_nav_{key}", key=f"_navbtn_{key}"):
-            if key == "__logout__":
-                for k in list(st.session_state.keys()):
-                    del st.session_state[k]
-                st.rerun()
-            else:
-                st.session_state.active_page = key
-                st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Build navbar HTML ──
     admin_badge = (
@@ -1154,7 +1137,7 @@ def render_sidebar():
             f'{label}</button>'
         )
 
-    # Mobile nav items (larger tap targets)
+    # Mobile nav items
     mob_items_html = ""
     for key, label in PAGE_MAP.items():
         is_act = (key == active)
@@ -1262,42 +1245,30 @@ def render_sidebar():
 
 <script>
 (function() {{
-  // ── Click any nav button → find the matching hidden Streamlit button and click it ──
+  // Navigate by setting ?nav=<key> — Streamlit detects query_param changes
+  // and reruns the same session (no new tab, no login loss).
   function navigate(pageKey) {{
-    // Close mobile menu if open
     var mob = document.getElementById('dv-mob-menu');
     if (mob) mob.style.display = 'none';
     mobOpen = false;
-
-    // Find the hidden Streamlit button whose label is "_nav_<pageKey>"
-    // Streamlit renders buttons as <button> with the label as text content
-    var allBtns = document.querySelectorAll('button');
-    for (var i = 0; i < allBtns.length; i++) {{
-      var btn = allBtns[i];
-      if (btn.textContent.trim() === '_nav_' + pageKey) {{
-        btn.click();
-        return;
-      }}
-    }}
+    // Set ?nav=<key> — this triggers a Streamlit rerun in the same session
+    var url = new URL(window.location.href);
+    url.searchParams.set('nav', pageKey);
+    window.location.href = url.toString();
   }}
 
-  // Wire up desktop nav buttons
   document.querySelectorAll('.nb-link, .nb-logout-btn').forEach(function(btn) {{
-    btn.addEventListener('click', function(e) {{
-      e.preventDefault();
+    btn.addEventListener('click', function() {{
       navigate(btn.getAttribute('data-page'));
     }});
   }});
 
-  // Wire up mobile nav buttons
   document.querySelectorAll('.mob-link').forEach(function(btn) {{
-    btn.addEventListener('click', function(e) {{
-      e.preventDefault();
+    btn.addEventListener('click', function() {{
       navigate(btn.getAttribute('data-page'));
     }});
   }});
 
-  // Mobile hamburger toggle
   var mobOpen = false;
   var mobToggle = document.getElementById('dv-mob-toggle');
   if (mobToggle) {{
@@ -2499,6 +2470,23 @@ def main():
     if not st.session_state.logged_in:
         page_auth()
         return
+
+    # ── Handle nav query param (set by navbar JS via replaceState) ──
+    # Reading st.query_params triggers a rerun but keeps the session alive.
+    nav_qp = st.query_params.get("nav", "")
+    if nav_qp:
+        if nav_qp == "__logout__":
+            st.query_params.clear()
+            for k in list(st.session_state.keys()):
+                del st.session_state[k]
+            st.rerun()
+        else:
+            valid_pages = {"dashboard","daily","goals","habits","reviews",
+                           "skills","finance","journal","profile","admin"}
+            if nav_qp in valid_pages:
+                st.session_state.active_page = nav_qp
+            st.query_params.clear()
+            st.rerun()
 
     selected = render_sidebar()
 
