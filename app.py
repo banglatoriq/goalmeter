@@ -1074,7 +1074,7 @@ def page_auth():
 
 
 # ──────────────────────────────────────────────────────────────
-#  TOP NAVBAR  (fixed header — pure Streamlit session_state nav)
+#  TOP NAVBAR
 # ──────────────────────────────────────────────────────────────
 def render_sidebar():
     uid   = st.session_state.user_id
@@ -1087,139 +1087,127 @@ def render_sidebar():
     pct   = done / total * 100 if total else 0
     bar_color = "#34d399" if pct >= 75 else "#fbbf24" if pct >= 40 else "#f87171"
 
-    # ── Admin check ──
     with conn() as db:
         u_row = db.execute("SELECT is_admin FROM users WHERE id=?", (uid,)).fetchone()
     is_admin_user = bool(u_row and u_row["is_admin"])
     st.session_state.is_admin = is_admin_user
 
-    # ── Page definitions ──
-    PAGE_MAP = {
-        "dashboard": t("nav_dashboard"),
-        "daily":     t("nav_daily"),
-        "goals":     t("nav_goals"),
-        "habits":    t("nav_habits"),
-        "reviews":   t("nav_reviews"),
-        "skills":    t("nav_skills"),
-        "finance":   t("nav_finance"),
-        "journal":   "📝  Journal",
-        "profile":   t("nav_profile"),
-    }
+    PAGE_KEYS   = ["dashboard","daily","goals","habits","reviews",
+                   "skills","finance","journal","profile"]
+    PAGE_LABELS = [t("nav_dashboard"), t("nav_daily"), t("nav_goals"),
+                   t("nav_habits"), t("nav_reviews"), t("nav_skills"),
+                   t("nav_finance"), "Journal", t("nav_profile")]
     if is_admin_user:
-        PAGE_MAP["admin"] = t("nav_admin")
+        PAGE_KEYS.append("admin")
+        PAGE_LABELS.append(t("nav_admin"))
 
-    # ── Active page from session state ──
     if "active_page" not in st.session_state:
         st.session_state.active_page = "dashboard"
     active = st.session_state.active_page
+    cur_idx = PAGE_KEYS.index(active) if active in PAGE_KEYS else 0
 
-    # ── Build navbar HTML ──
+    # ── CSS ──
+    st.markdown("""<style>
+#dv-nav-radio-wrap, #dv-logout-wrap {
+    position:fixed !important; top:-9999px !important; left:-9999px !important;
+    width:0 !important; height:0 !important; overflow:hidden !important;
+    opacity:0 !important; pointer-events:none !important;
+}
+#dv-navbar {
+    position:fixed; top:0; left:0; right:0; height:56px;
+    background:linear-gradient(90deg,#080c14 0%,#0d1220 100%);
+    border-bottom:1px solid #1a2540; display:flex; align-items:center;
+    padding:0 16px; gap:4px; z-index:99999;
+    box-shadow:0 2px 20px rgba(0,0,0,.6); font-family:'Inter',-apple-system,sans-serif;
+}
+.nb-logo{display:flex;align-items:center;gap:7px;margin-right:10px;flex-shrink:0;}
+.nb-logo-icon{font-size:1.3rem;line-height:1;}
+.nb-logo-text{font-size:.95rem;font-weight:800;color:#38bdf8;letter-spacing:-.4px;white-space:nowrap;}
+.nb-sep{width:1px;height:28px;background:#1e2d48;margin:0 8px;flex-shrink:0;}
+.nb-links{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;}
+.nb-links::-webkit-scrollbar{display:none;}
+.nb-link{display:inline-flex;align-items:center;padding:5px 10px;border-radius:7px;
+    font-size:.78rem;font-weight:500;color:#94a3b8;border:none;cursor:pointer;
+    background:transparent;white-space:nowrap;transition:background .15s,color .15s;
+    flex-shrink:0;font-family:'Inter',sans-serif;}
+.nb-link:hover{background:#1e2d48;color:#dce7f3;}
+.nb-link.active{background:#1e2d48;color:#38bdf8;font-weight:700;box-shadow:inset 0 -2px 0 #38bdf8;}
+.nb-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto;}
+.nb-user{display:flex;flex-direction:column;align-items:flex-end;line-height:1.3;}
+.nb-username{font-size:.78rem;font-weight:700;color:#dce7f3;white-space:nowrap;}
+.nb-role{font-size:.62rem;color:#475569;white-space:nowrap;}
+.nb-progress{display:flex;align-items:center;gap:5px;background:#0d1627;
+    border:1px solid #1e2d48;border-radius:8px;padding:4px 9px;}
+.nb-pct{font-size:.82rem;font-weight:800;line-height:1;}
+.nb-track{width:40px;height:4px;background:#1a2540;border-radius:99px;overflow:hidden;}
+.nb-fill{height:100%;border-radius:99px;}
+.nb-count{font-size:.6rem;color:#475569;white-space:nowrap;}
+.nb-logout-btn{padding:5px 10px;border-radius:7px;font-size:.73rem;font-weight:600;
+    color:#f87171;border:1px solid #4a1a1a;background:#1a0d0d;white-space:nowrap;
+    flex-shrink:0;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s;}
+.nb-logout-btn:hover{background:#2a1010;}
+#dv-mob-toggle{display:none;background:#0d1627;border:1px solid #1e2d48;
+    border-radius:8px;padding:6px 9px;cursor:pointer;flex-shrink:0;margin-left:4px;}
+#dv-mob-toggle span{display:block;width:18px;height:2px;background:#38bdf8;
+    border-radius:2px;margin:3px 0;transition:all .2s;}
+#dv-mob-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#0d1220;
+    border-bottom:1px solid #1a2540;padding:8px 12px 14px;z-index:99998;
+    flex-direction:column;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.mob-link{display:block;width:100%;padding:11px 14px;border-radius:8px;font-size:.9rem;
+    font-weight:500;color:#94a3b8;border:none;cursor:pointer;background:transparent;
+    text-align:left;transition:background .15s,color .15s;font-family:'Inter',sans-serif;}
+.mob-link:hover{background:#1e2d48;color:#38bdf8;}
+.mob-link.active{background:#1e2d48;color:#38bdf8;font-weight:700;}
+@media(max-width:768px){
+    .nb-links{display:none !important;} .nb-user{display:none !important;}
+    .nb-sep{display:none !important;} #dv-mob-toggle{display:block !important;}
+}
+.main .block-container{padding-top:72px !important;}
+</style>""", unsafe_allow_html=True)
+
+    # ── Hidden radio (real Streamlit nav widget) ──
+    st.markdown('<div id="dv-nav-radio-wrap">', unsafe_allow_html=True)
+    sel = st.radio("dv_nav", PAGE_LABELS, index=cur_idx,
+                   key="dv_nav_radio", label_visibility="collapsed", horizontal=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    sel_key = PAGE_KEYS[PAGE_LABELS.index(sel)]
+    if sel_key != st.session_state.active_page:
+        st.session_state.active_page = sel_key
+        st.rerun()
+    active = st.session_state.active_page
+
+    # ── Hidden logout button ──
+    st.markdown('<div id="dv-logout-wrap">', unsafe_allow_html=True)
+    if st.button("dv_logout", key="dv_logout_btn"):
+        for k in list(st.session_state.keys()):
+            del st.session_state[k]
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Visual navbar ──
     admin_badge = (
         '<span style="display:inline-block;background:linear-gradient(90deg,#f87171,#fbbf24);'
         'color:#080c14;font-size:.5rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;'
         'padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle">ADMIN</span>'
         if is_admin_user else ""
     )
+    nav_html = ""
+    mob_html = ""
+    for key, label in zip(PAGE_KEYS, PAGE_LABELS):
+        ac = " active" if key == active else ""
+        nav_html += f'<button class="nb-link{ac}" data-navkey="{key}">{label}</button>'
+        mob_html += f'<button class="mob-link{ac}" data-navkey="{key}">{label}</button>'
+    mob_html += ('<button class="mob-link" data-navkey="__logout__" '
+                 'style="color:#f87171;margin-top:6px;border-top:1px solid #1a2540;padding-top:13px;">'
+                 '🚪 Logout</button>')
 
-    # Desktop nav items
-    nav_items_html = ""
-    for key, label in PAGE_MAP.items():
-        is_act = (key == active)
-        style = (
-            "background:#1e2d48;color:#38bdf8;font-weight:700;box-shadow:inset 0 -2px 0 #38bdf8;"
-            if is_act else "color:#94a3b8;"
-        )
-        nav_items_html += (
-            f'<button class="nb-link" data-page="{key}" '
-            f'style="display:inline-flex;align-items:center;padding:5px 10px;border-radius:7px;'
-            f'font-size:.78rem;font-weight:500;border:none;cursor:pointer;background:transparent;'
-            f'white-space:nowrap;transition:background .15s,color .15s;flex-shrink:0;{style}">'
-            f'{label}</button>'
-        )
-
-    # Mobile nav items
-    mob_items_html = ""
-    for key, label in PAGE_MAP.items():
-        is_act = (key == active)
-        style = "background:#1e2d48;color:#38bdf8;font-weight:700;" if is_act else "color:#94a3b8;"
-        mob_items_html += (
-            f'<button class="mob-link" data-page="{key}" '
-            f'style="display:block;width:100%;padding:11px 14px;border-radius:8px;'
-            f'font-size:.9rem;font-weight:500;border:none;cursor:pointer;background:transparent;'
-            f'text-align:left;transition:background .15s,color .15s;{style}">'
-            f'{label}</button>'
-        )
-    mob_items_html += (
-        '<button class="mob-link" data-page="__logout__" '
-        'style="display:block;width:100%;padding:11px 14px;border-radius:8px;'
-        'font-size:.9rem;font-weight:600;border:none;cursor:pointer;background:transparent;'
-        'text-align:left;color:#f87171;margin-top:6px;border-top:1px solid #1a2540;padding-top:13px;">'
-        '🚪 Logout</button>'
-    )
-
-    navbar_html = f"""
-<style>
-#dv-navbar {{
-    position:fixed; top:0; left:0; right:0; height:56px;
-    background:linear-gradient(90deg,#080c14 0%,#0d1220 100%);
-    border-bottom:1px solid #1a2540;
-    display:flex; align-items:center; padding:0 16px; gap:4px;
-    z-index:99999; box-shadow:0 2px 20px rgba(0,0,0,.6);
-    font-family:'Inter',-apple-system,sans-serif;
-}}
-.nb-logo {{ display:flex;align-items:center;gap:7px;margin-right:10px;flex-shrink:0; }}
-.nb-logo-icon {{ font-size:1.3rem;line-height:1; }}
-.nb-logo-text {{ font-size:.95rem;font-weight:800;color:#38bdf8;letter-spacing:-.4px;white-space:nowrap; }}
-.nb-sep {{ width:1px;height:28px;background:#1e2d48;margin:0 8px;flex-shrink:0; }}
-.nb-links {{ display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none; }}
-.nb-links::-webkit-scrollbar {{ display:none; }}
-.nb-link:hover {{ background:#1e2d48 !important; color:#dce7f3 !important; }}
-.nb-right {{ display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto; }}
-.nb-user {{ display:flex;flex-direction:column;align-items:flex-end;line-height:1.3; }}
-.nb-username {{ font-size:.78rem;font-weight:700;color:#dce7f3;white-space:nowrap; }}
-.nb-role {{ font-size:.62rem;color:#475569;white-space:nowrap; }}
-.nb-progress {{ display:flex;align-items:center;gap:5px;background:#0d1627;border:1px solid #1e2d48;border-radius:8px;padding:4px 9px; }}
-.nb-pct {{ font-size:.82rem;font-weight:800;line-height:1; }}
-.nb-track {{ width:40px;height:4px;background:#1a2540;border-radius:99px;overflow:hidden; }}
-.nb-fill {{ height:100%;border-radius:99px; }}
-.nb-count {{ font-size:.6rem;color:#475569;white-space:nowrap; }}
-.nb-logout-btn {{
-    padding:5px 10px;border-radius:7px;font-size:.73rem;font-weight:600;
-    color:#f87171;border:1px solid #4a1a1a;background:#1a0d0d;
-    white-space:nowrap;flex-shrink:0;cursor:pointer;
-    font-family:'Inter',sans-serif;transition:background .15s;
-}}
-.nb-logout-btn:hover {{ background:#2a1010; }}
-#dv-mob-toggle {{
-    display:none;background:#0d1627;border:1px solid #1e2d48;
-    border-radius:8px;padding:6px 9px;cursor:pointer;flex-shrink:0;margin-left:4px;
-}}
-#dv-mob-toggle span {{
-    display:block;width:18px;height:2px;background:#38bdf8;
-    border-radius:2px;margin:3px 0;transition:all .2s;
-}}
-#dv-mob-menu {{
-    display:none;position:fixed;top:56px;left:0;right:0;
-    background:#0d1220;border-bottom:1px solid #1a2540;
-    padding:8px 12px 14px;z-index:99998;flex-direction:column;gap:2px;
-    box-shadow:0 8px 24px rgba(0,0,0,.5);
-}}
-.mob-link:hover {{ background:#1e2d48 !important; color:#38bdf8 !important; }}
-@media(max-width:768px) {{
-    .nb-links {{ display:none !important; }}
-    .nb-user  {{ display:none !important; }}
-    .nb-sep   {{ display:none !important; }}
-    #dv-mob-toggle {{ display:block !important; }}
-}}
-</style>
-
+    st.markdown(f"""
 <div id="dv-navbar">
-  <div class="nb-logo">
-    <span class="nb-logo-icon">⚡</span>
-    <span class="nb-logo-text">DevLife OS</span>
-  </div>
+  <div class="nb-logo"><span class="nb-logo-icon">⚡</span>
+    <span class="nb-logo-text">DevLife OS</span></div>
   <div class="nb-sep"></div>
-  <div class="nb-links">{nav_items_html}</div>
+  <div class="nb-links">{nav_html}</div>
   <div class="nb-right">
     <div class="nb-user">
       <span class="nb-username">{uname}{admin_badge}</span>
@@ -1227,64 +1215,85 @@ def render_sidebar():
     </div>
     <div class="nb-progress">
       <span class="nb-pct" style="color:{bar_color}">{pct:.0f}%</span>
-      <div class="nb-track">
-        <div class="nb-fill" style="background:{bar_color};width:{pct:.0f}%"></div>
-      </div>
+      <div class="nb-track"><div class="nb-fill" style="background:{bar_color};width:{pct:.0f}%"></div></div>
       <span class="nb-count">{done}/{total}</span>
     </div>
-    <button class="nb-logout-btn" data-page="__logout__">🚪 Logout</button>
+    <button class="nb-logout-btn" data-navkey="__logout__">🚪 Logout</button>
   </div>
   <button id="dv-mob-toggle" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
 </div>
+<div id="dv-mob-menu">{mob_html}</div>
+""", unsafe_allow_html=True)
 
-<div id="dv-mob-menu">{mob_items_html}</div>
+    # ── JS: self-contained iframe, uses window.parent to click radio inputs ──
+    keys_json   = str(PAGE_KEYS).replace("'", '"')
+    labels_json = str(PAGE_LABELS).replace("'", '"')
 
-<div style="height:64px"></div>
+    js_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>body{{margin:0;padding:0;background:transparent;overflow:hidden;}}</style>
+</head><body><script>
+var KEYS   = {keys_json};
+var LABELS = {labels_json};
 
-<script>
-(function() {{
-  // Navigate by setting ?nav=<key> — Streamlit detects query_param changes
-  // and reruns the same session (no new tab, no login loss).
-  function navigate(pageKey) {{
-    var mob = document.getElementById('dv-mob-menu');
+function navigate(key) {{
+  try {{
+    var pd = window.parent.document;
+    // Close mobile menu
+    var mob = pd.getElementById('dv-mob-menu');
     if (mob) mob.style.display = 'none';
-    mobOpen = false;
-    // Set ?nav=<key> — this triggers a Streamlit rerun in the same session
-    var url = new URL(window.location.href);
-    url.searchParams.set('nav', pageKey);
-    window.location.href = url.toString();
-  }}
 
-  document.querySelectorAll('.nb-link, .nb-logout-btn').forEach(function(btn) {{
-    btn.addEventListener('click', function() {{
-      navigate(btn.getAttribute('data-page'));
+    if (key === '__logout__') {{
+      var lw = pd.getElementById('dv-logout-wrap');
+      if (lw) {{ var b = lw.querySelector('button'); if (b) b.click(); }}
+      return;
+    }}
+
+    var idx = KEYS.indexOf(key);
+    if (idx < 0) return;
+
+    // Click the radio input at this index inside dv-nav-radio-wrap
+    var rw = pd.getElementById('dv-nav-radio-wrap');
+    if (rw) {{
+      var inputs = rw.querySelectorAll('input[type=radio]');
+      if (inputs[idx]) {{ inputs[idx].click(); return; }}
+      // Fallback: click label
+      var lbls = rw.querySelectorAll('label');
+      if (lbls[idx]) {{ lbls[idx].click(); return; }}
+    }}
+  }} catch(e) {{ console.warn('dv-nav:', e); }}
+}}
+
+function wire() {{
+  try {{
+    var pd = window.parent.document;
+    pd.querySelectorAll('[data-navkey]').forEach(function(btn) {{
+      var c = btn.cloneNode(true);
+      btn.parentNode.replaceChild(c, btn);
+      c.addEventListener('click', function() {{ navigate(c.getAttribute('data-navkey')); }});
     }});
-  }});
+    var tog = pd.getElementById('dv-mob-toggle');
+    if (tog && !tog._dv) {{
+      tog._dv = true;
+      var open = false;
+      tog.addEventListener('click', function() {{
+        open = !open;
+        var m = pd.getElementById('dv-mob-menu');
+        if (m) m.style.display = open ? 'flex' : 'none';
+      }});
+    }}
+  }} catch(e) {{}}
+}}
 
-  document.querySelectorAll('.mob-link').forEach(function(btn) {{
-    btn.addEventListener('click', function() {{
-      navigate(btn.getAttribute('data-page'));
-    }});
-  }});
+wire();
+setTimeout(wire, 200);
+setTimeout(wire, 600);
+setTimeout(wire, 1500);
+</script></body></html>"""
 
-  var mobOpen = false;
-  var mobToggle = document.getElementById('dv-mob-toggle');
-  if (mobToggle) {{
-    mobToggle.addEventListener('click', function() {{
-      mobOpen = !mobOpen;
-      var mob = document.getElementById('dv-mob-menu');
-      if (mob) mob.style.display = mobOpen ? 'flex' : 'none';
-    }});
-  }}
-}})();
-</script>
-"""
-
-    st.markdown(navbar_html, unsafe_allow_html=True)
+    components.html(js_html, height=0, scrolling=False)
     return active
-
 
 # ──────────────────────────────────────────────────────────────
 #  PAGE: DASHBOARD
