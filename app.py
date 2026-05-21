@@ -1074,11 +1074,9 @@ def page_auth():
 
 
 # ──────────────────────────────────────────────────────────────
-#  TOP NAVBAR  (fixed header, always visible, all menu items)
+#  TOP NAVBAR  (fixed header — pure Streamlit session_state nav)
 # ──────────────────────────────────────────────────────────────
 def render_sidebar():
-    import json
-
     uid   = st.session_state.user_id
     uname = st.session_state.username
     today = datetime.date.today().isoformat()
@@ -1095,289 +1093,244 @@ def render_sidebar():
     is_admin_user = bool(u_row and u_row["is_admin"])
     st.session_state.is_admin = is_admin_user
 
-    # ── Nav items ──
-    nav_items = [
-        t("nav_dashboard"), t("nav_daily"), t("nav_goals"),
-        t("nav_habits"), t("nav_reviews"), t("nav_skills"),
-        t("nav_finance"), t("nav_profile"),
-    ]
-    if is_admin_user:
-        nav_items.append(t("nav_admin"))
-
-    # ── Resolve current page from query params ──
-    qp = st.query_params.get("page", "")
-    PAGE_KEYWORDS = {
-        t("nav_dashboard"):  ["dashboard"],
-        t("nav_daily"):      ["daily", "routine"],
-        t("nav_goals"):      ["goal"],
-        t("nav_habits"):     ["habit"],
-        t("nav_reviews"):    ["review"],
-        t("nav_skills"):     ["skill", "roadmap"],
-        t("nav_finance"):    ["finance"],
-        t("nav_profile"):    ["profile"],
-        t("nav_admin"):      ["admin"],
+    # ── Page map: key → display label ──
+    PAGE_MAP = {
+        "dashboard":  t("nav_dashboard"),
+        "daily":      t("nav_daily"),
+        "goals":      t("nav_goals"),
+        "habits":     t("nav_habits"),
+        "reviews":    t("nav_reviews"),
+        "skills":     t("nav_skills"),
+        "finance":    t("nav_finance"),
+        "journal":    "📝  Journal",
+        "profile":    t("nav_profile"),
     }
-    selected_label = nav_items[0]
-    if qp:
-        for label, kws in PAGE_KEYWORDS.items():
-            if any(kw in qp.lower() for kw in kws):
-                if label in nav_items:
-                    selected_label = label
-                break
+    if is_admin_user:
+        PAGE_MAP["admin"] = t("nav_admin")
 
-    # ── Handle logout ──
-    if qp == "__logout__":
-        st.query_params.clear()
+    # ── Resolve active page from session state ──
+    if "active_page" not in st.session_state:
+        st.session_state.active_page = "dashboard"
+    active = st.session_state.active_page
+
+    # ── Logout handler ──
+    if active == "__logout__":
         for k in list(st.session_state.keys()):
             del st.session_state[k]
         st.rerun()
 
-    # ── Build nav items for JS ──
-    nav_json = json.dumps([
-        {"label": item,
-         "key":   item.replace(" ", "_").replace("/", "_"),
-         "active": item == selected_label}
-        for item in nav_items
-    ])
+    # ── Build navbar HTML (pure HTML/CSS, no JS needed — links use st buttons) ──
+    admin_badge = (
+        '<span style="display:inline-block;background:linear-gradient(90deg,#f87171,#fbbf24);'
+        'color:#080c14;font-size:.5rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;'
+        'padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle">ADMIN</span>'
+        if is_admin_user else ""
+    )
 
-    role_str  = st.session_state.role[:28]
-    stack_str = st.session_state.stack[:30]
-    admin_dot = "🔴 " if is_admin_user else ""
+    # Build nav link items HTML
+    nav_links_html = ""
+    for key, label in PAGE_MAP.items():
+        is_active = (key == active)
+        active_style = (
+            "background:#1e2d48;color:#38bdf8;font-weight:700;"
+            "box-shadow:inset 0 -2px 0 #38bdf8;"
+            if is_active else
+            "color:#94a3b8;"
+        )
+        nav_links_html += (
+            f'<a href="?page={key}" style="display:inline-flex;align-items:center;'
+            f'padding:5px 10px;border-radius:7px;font-size:.78rem;font-weight:500;'
+            f'text-decoration:none;white-space:nowrap;transition:background .15s,color .15s;'
+            f'flex-shrink:0;{active_style}">{label}</a>'
+        )
 
-    navbar_html = f"""<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
+    navbar_html = f"""
 <style>
-  * {{ margin:0; padding:0; box-sizing:border-box; }}
-  body {{
-    background: transparent;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    overflow: hidden;
-  }}
-
-  /* ── Fixed navbar bar ── */
-  #navbar {{
+/* ── Navbar container injected into main page ── */
+#dv-navbar {{
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: 52px;
+    height: 56px;
     background: linear-gradient(90deg, #080c14 0%, #0d1220 100%);
     border-bottom: 1px solid #1a2540;
     display: flex;
     align-items: center;
     padding: 0 16px;
     gap: 4px;
-    z-index: 9999;
-    box-shadow: 0 2px 20px rgba(0,0,0,.5);
-  }}
+    z-index: 99999;
+    box-shadow: 0 2px 20px rgba(0,0,0,.6);
+    font-family: 'Inter', -apple-system, sans-serif;
+}}
+#dv-navbar .nb-logo {{
+    display: flex; align-items: center; gap: 7px;
+    margin-right: 10px; flex-shrink: 0; text-decoration: none;
+}}
+#dv-navbar .nb-logo-icon {{ font-size: 1.3rem; line-height: 1; }}
+#dv-navbar .nb-logo-text {{
+    font-size: .95rem; font-weight: 800; color: #38bdf8;
+    letter-spacing: -.4px; white-space: nowrap;
+}}
+#dv-navbar .nb-sep {{
+    width: 1px; height: 28px; background: #1e2d48;
+    margin: 0 8px; flex-shrink: 0;
+}}
+#dv-navbar .nb-links {{
+    display: flex; align-items: center; gap: 2px;
+    flex: 1; overflow-x: auto; scrollbar-width: none;
+}}
+#dv-navbar .nb-links::-webkit-scrollbar {{ display: none; }}
+#dv-navbar .nb-links a:hover {{
+    background: #1e2d48 !important; color: #dce7f3 !important;
+}}
+#dv-navbar .nb-right {{
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0; margin-left: auto;
+}}
+#dv-navbar .nb-user {{
+    display: flex; flex-direction: column;
+    align-items: flex-end; line-height: 1.3;
+}}
+#dv-navbar .nb-username {{
+    font-size: .78rem; font-weight: 700; color: #dce7f3; white-space: nowrap;
+}}
+#dv-navbar .nb-role {{
+    font-size: .62rem; color: #475569; white-space: nowrap;
+}}
+#dv-navbar .nb-progress {{
+    display: flex; align-items: center; gap: 5px;
+    background: #0d1627; border: 1px solid #1e2d48;
+    border-radius: 8px; padding: 4px 9px;
+}}
+#dv-navbar .nb-pct {{
+    font-size: .82rem; font-weight: 800; line-height: 1;
+}}
+#dv-navbar .nb-track {{
+    width: 40px; height: 4px; background: #1a2540;
+    border-radius: 99px; overflow: hidden;
+}}
+#dv-navbar .nb-fill {{ height: 100%; border-radius: 99px; }}
+#dv-navbar .nb-count {{
+    font-size: .6rem; color: #475569; white-space: nowrap;
+}}
+#dv-navbar .nb-logout {{
+    padding: 5px 10px; border-radius: 7px; font-size: .73rem;
+    font-weight: 600; color: #f87171; text-decoration: none;
+    border: 1px solid #4a1a1a; background: #1a0d0d;
+    white-space: nowrap; flex-shrink: 0;
+    font-family: 'Inter', sans-serif;
+}}
+#dv-navbar .nb-logout:hover {{ background: #2a1010 !important; color: #f87171 !important; }}
 
-  /* Logo */
-  .nb-logo {{
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin-right: 12px;
-    flex-shrink: 0;
-    text-decoration: none;
-  }}
-  .nb-logo-icon {{ font-size: 1.3rem; line-height: 1; }}
-  .nb-logo-text {{
-    font-size: .95rem;
-    font-weight: 800;
-    color: #38bdf8;
-    letter-spacing: -.4px;
-    white-space: nowrap;
-  }}
-
-  /* Divider */
-  .nb-sep {{
-    width: 1px; height: 28px;
-    background: #1e2d48;
-    margin: 0 8px;
-    flex-shrink: 0;
-  }}
-
-  /* Nav links */
-  .nb-links {{
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex: 1;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }}
-  .nb-links::-webkit-scrollbar {{ display: none; }}
-
-  .nb-link {{
-    display: flex;
-    align-items: center;
-    padding: 5px 10px;
-    border-radius: 7px;
-    font-size: .78rem;
-    font-weight: 500;
-    color: #94a3b8;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    white-space: nowrap;
-    transition: background .15s, color .15s;
-    font-family: inherit;
-    letter-spacing: .1px;
-    flex-shrink: 0;
-  }}
-  .nb-link:hover  {{ background: #1e2d48; color: #dce7f3; }}
-  .nb-link.active {{
-    background: #1e2d48;
-    color: #38bdf8;
-    font-weight: 700;
-    box-shadow: inset 0 -2px 0 #38bdf8;
-  }}
-
-  /* Right side: user info + progress + logout */
-  .nb-right {{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    margin-left: auto;
-  }}
-
-  .nb-user {{
-    display: flex;
+/* ── Mobile: hamburger menu ── */
+#dv-mob-toggle {{
+    display: none;
+    background: #0d1627; border: 1px solid #1e2d48;
+    border-radius: 8px; padding: 6px 9px; cursor: pointer;
+    flex-shrink: 0; margin-left: 4px;
+}}
+#dv-mob-toggle span {{
+    display: block; width: 18px; height: 2px;
+    background: #38bdf8; border-radius: 2px; margin: 3px 0;
+    transition: all .2s;
+}}
+#dv-mob-menu {{
+    display: none;
+    position: fixed;
+    top: 56px; left: 0; right: 0;
+    background: #0d1220;
+    border-bottom: 1px solid #1a2540;
+    padding: 8px 12px 12px;
+    z-index: 99998;
     flex-direction: column;
-    align-items: flex-end;
-    line-height: 1.3;
-  }}
-  .nb-username {{
-    font-size: .78rem;
-    font-weight: 700;
-    color: #dce7f3;
-    white-space: nowrap;
-  }}
-  .nb-role {{
-    font-size: .65rem;
-    color: #475569;
-    white-space: nowrap;
-  }}
+    gap: 2px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}}
+#dv-mob-menu a {{
+    display: block; padding: 10px 14px; border-radius: 8px;
+    font-size: .88rem; font-weight: 500; color: #94a3b8;
+    text-decoration: none; transition: background .15s, color .15s;
+}}
+#dv-mob-menu a:hover, #dv-mob-menu a.active {{
+    background: #1e2d48; color: #38bdf8;
+}}
+#dv-mob-menu a.active {{ font-weight: 700; }}
 
-  /* Progress pill */
-  .nb-progress {{
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: #0d1627;
-    border: 1px solid #1e2d48;
-    border-radius: 8px;
-    padding: 4px 10px;
-  }}
-  .nb-pct {{
-    font-size: .82rem;
-    font-weight: 800;
-    line-height: 1;
-  }}
-  .nb-track {{
-    width: 48px;
-    height: 4px;
-    background: #1a2540;
-    border-radius: 99px;
-    overflow: hidden;
-  }}
-  .nb-fill {{
-    height: 100%;
-    border-radius: 99px;
-  }}
-  .nb-habits {{
-    font-size: .62rem;
-    color: #475569;
-    white-space: nowrap;
-  }}
-
-  /* Logout button */
-  .nb-logout {{
-    padding: 5px 12px;
-    border-radius: 7px;
-    font-size: .75rem;
-    font-weight: 600;
-    color: #f87171;
-    cursor: pointer;
-    border: 1px solid #4a1a1a;
-    background: #1a0d0d;
-    transition: background .15s;
-    font-family: inherit;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }}
-  .nb-logout:hover {{ background: #2a1010; }}
+@media (max-width: 768px) {{
+    #dv-navbar .nb-links {{ display: none !important; }}
+    #dv-navbar .nb-user  {{ display: none !important; }}
+    #dv-mob-toggle {{ display: block !important; }}
+    #dv-navbar .nb-sep {{ display: none !important; }}
+}}
 </style>
-</head>
-<body>
 
-<nav id="navbar">
-  <!-- Logo -->
+<div id="dv-navbar">
   <div class="nb-logo">
     <span class="nb-logo-icon">⚡</span>
     <span class="nb-logo-text">DevLife OS</span>
   </div>
-
   <div class="nb-sep"></div>
-
-  <!-- Nav links (built by JS) -->
-  <div class="nb-links" id="nb-links"></div>
-
-  <!-- Right side -->
+  <div class="nb-links">{nav_links_html}</div>
   <div class="nb-right">
     <div class="nb-user">
-      <span class="nb-username">{admin_dot}{uname}</span>
-      <span class="nb-role">{role_str}</span>
+      <span class="nb-username">{uname}{admin_badge}</span>
+      <span class="nb-role">{st.session_state.role[:24]}</span>
     </div>
-
     <div class="nb-progress">
       <span class="nb-pct" style="color:{bar_color}">{pct:.0f}%</span>
       <div class="nb-track">
         <div class="nb-fill" style="background:{bar_color};width:{pct:.0f}%"></div>
       </div>
-      <span class="nb-habits">{done}/{total}</span>
+      <span class="nb-count">{done}/{total}</span>
     </div>
-
-    <button class="nb-logout" id="nb-logout">🚪 Logout</button>
+    <a href="?page=__logout__" class="nb-logout">🚪 Logout</a>
   </div>
-</nav>
+  <!-- Mobile hamburger -->
+  <button id="dv-mob-toggle" onclick="dvToggleMob()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- Mobile dropdown menu -->
+<div id="dv-mob-menu" id="dv-mob-menu">
+  {nav_links_html.replace('padding:5px 10px', 'padding:10px 14px').replace('font-size:.78rem', 'font-size:.88rem')}
+  <a href="?page=__logout__" style="color:#f87171;padding:10px 14px;border-radius:8px;
+     font-size:.88rem;text-decoration:none;display:block;margin-top:4px;
+     border-top:1px solid #1a2540;padding-top:12px;">🚪 Logout</a>
+</div>
 
 <script>
-var NAV_ITEMS = {nav_json};
-
-var linksEl = document.getElementById('nb-links');
-NAV_ITEMS.forEach(function(item) {{
-  var btn = document.createElement('button');
-  btn.className = 'nb-link' + (item.active ? ' active' : '');
-  btn.textContent = item.label;
-  btn.addEventListener('click', function() {{
-    var url = new URL(window.parent.location.href);
-    url.searchParams.set('page', item.key);
-    window.parent.location.href = url.toString();
+var mobOpen = false;
+function dvToggleMob() {{
+  mobOpen = !mobOpen;
+  var m = document.getElementById('dv-mob-menu');
+  m.style.display = mobOpen ? 'flex' : 'none';
+}}
+// Close mobile menu when a link is clicked
+document.querySelectorAll('#dv-mob-menu a').forEach(function(a) {{
+  a.addEventListener('click', function() {{
+    mobOpen = false;
+    document.getElementById('dv-mob-menu').style.display = 'none';
   }});
-  linksEl.appendChild(btn);
-}});
-
-document.getElementById('nb-logout').addEventListener('click', function() {{
-  var url = new URL(window.parent.location.href);
-  url.searchParams.set('page', '__logout__');
-  window.parent.location.href = url.toString();
 }});
 </script>
-</body>
-</html>"""
 
-    # height=52 matches the navbar height; the iframe sits at the top
-    components.html(navbar_html, height=52, scrolling=False)
+<div style="height:64px"></div>
+"""
 
-    # Push page content down so it doesn't hide under the navbar
-    st.markdown(
-        '<div style="height:52px"></div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown(navbar_html, unsafe_allow_html=True)
 
-    return selected_label.strip()
+    # ── Handle page routing via ?page= query param ──
+    qp = st.query_params.get("page", "")
+    if qp == "__logout__":
+        st.query_params.clear()
+        for k in list(st.session_state.keys()):
+            del st.session_state[k]
+        st.rerun()
+    if qp and qp in PAGE_MAP:
+        st.session_state.active_page = qp
+        active = qp
+
+    return active
 
 
 # ──────────────────────────────────────────────────────────────
@@ -2430,18 +2383,122 @@ def page_admin():
 
 
 # ──────────────────────────────────────────────────────────────
+#  PAGE: JOURNAL  (dedicated full-page daily journal)
+# ──────────────────────────────────────────────────────────────
+def page_journal():
+    uid = st.session_state.user_id
+    st.markdown("## 📝 Daily Journal")
+
+    sel     = st.date_input("Date", value=datetime.date.today(), max_value=datetime.date.today())
+    sel_str = sel.isoformat()
+    ex      = get_journal(uid, sel_str)
+
+    qt, qa, qc = random_quote_by_cat("Mindset")
+    st.markdown(quote_card(qt, qa, qc), unsafe_allow_html=True)
+
+    with st.form("journal_page_form"):
+        # ── Nightly Review ──
+        st.markdown('<div class="oc-section oc-section-fire"><div style="font-size:.7rem;font-weight:700;'
+                    'letter-spacing:1.4px;text-transform:uppercase;color:#f43127;margin-bottom:10px">'
+                    '🌙 Nightly Review — দিন শেষের হিসাব</div>', unsafe_allow_html=True)
+        nightly_review = st.text_area(
+            t("j_accomplished"),
+            value=ex["nightly_review"] if ex and ex["nightly_review"] else "",
+            height=100, placeholder="I shipped the auth module, fixed 2 bugs…")
+        q3 = st.text_area(
+            t("j_improve"),
+            value=ex["q3"] if ex and ex["q3"] else "",
+            height=80, placeholder="Tomorrow I need to focus more on deep work…")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # ── Tomorrow's Plan ──
+        st.markdown('<div class="oc-section oc-section-gold"><div style="font-size:.7rem;font-weight:700;'
+                    'letter-spacing:1.4px;text-transform:uppercase;color:#fcb302;margin-bottom:10px">'
+                    "🎯 Tomorrow's Plan — আগের রাতের পরিকল্পনা</div>", unsafe_allow_html=True)
+        tomorrow_plan = st.text_area(
+            t("j_tomorrow_plan"),
+            value=ex["tomorrow_plan"] if ex and ex["tomorrow_plan"] else "",
+            height=100, placeholder="1. Complete the payment API\n2. Write unit tests\n3. Review PRs")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # ── Information Capture ──
+        st.markdown('<div class="oc-section oc-section-teal"><div style="font-size:.7rem;font-weight:700;'
+                    'letter-spacing:1.4px;text-transform:uppercase;color:#2dd4bf;margin-bottom:10px">'
+                    '🔗 Information Capture</div>', unsafe_allow_html=True)
+        info_capture = st.text_area(
+            t("j_capture"),
+            value=ex["info_capture"] if ex and ex["info_capture"] else "",
+            height=80, placeholder="https://… | Learned: async generators | Task: update README")
+        bd = st.text_area(
+            t("brain_dump"),
+            value=ex["brain_dump"] if ex and ex["brain_dump"] else "",
+            height=80, placeholder="Any ideas, random thoughts…")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # ── Mindset + Vitals ──
+        st.markdown('<div class="oc-section oc-section-blue"><div style="font-size:.7rem;font-weight:700;'
+                    'letter-spacing:1.4px;text-transform:uppercase;color:#38bdf8;margin-bottom:10px">'
+                    '🧠 Mindset Check + Vitals</div>', unsafe_allow_html=True)
+        mc, ec = st.columns(2)
+        mood   = mc.slider(t("mood"),   1, 10, int(ex["mood"])   if ex else 7)
+        energy = ec.slider(t("energy"), 1, 10, int(ex["energy"]) if ex else 7)
+        gc, fc = st.columns(2)
+        q1 = gc.text_area(t("q1"), value=ex["q1"] if ex and ex["q1"] else "",
+                          height=70, placeholder="I am grateful for…")
+        q2 = fc.text_area(t("q2"), value=ex["q2"] if ex and ex["q2"] else "",
+                          height=70, placeholder="The one technical problem I must solve…")
+        mindset_risk    = st.checkbox(t("j_risk"),    value=bool(ex["mindset_risk"])    if ex else False)
+        mindset_compare = st.checkbox(t("j_compare"), value=bool(ex["mindset_compare"]) if ex else False)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('<div class="btn-fire">', unsafe_allow_html=True)
+        submitted = st.form_submit_button(t("j_save"), use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        if submitted:
+            save_journal(uid, sel_str, q1, q2, q3, bd, mood, energy,
+                         nightly_review=nightly_review, tomorrow_plan=tomorrow_plan,
+                         info_capture=info_capture,
+                         mindset_risk=mindset_risk, mindset_compare=mindset_compare)
+            st.success(t("journal_saved"))
+
+    # ── Past entries ──
+    section("📅 Past Journal Entries — last 14 days")
+    jdf = get_journal_df(uid, 14)
+    if jdf.empty:
+        st.info("No journal entries yet. Start writing above.")
+    else:
+        for _, row in jdf.sort_values("date", ascending=False).iterrows():
+            mood_v   = row.get("mood", "?")
+            energy_v = row.get("energy", "?")
+            with st.expander(f"📝 {row['date']}  —  Mood {mood_v}/10  ·  Energy {energy_v}/10"):
+                if row.get("nightly_review"):
+                    st.markdown(f"**✅ Accomplished:** {row['nightly_review']}")
+                if row.get("tomorrow_plan"):
+                    st.markdown(f"**🎯 Tomorrow's plan:** {row['tomorrow_plan']}")
+                if row.get("q1"):
+                    st.markdown(f"**🙏 Grateful:** {row['q1']}")
+                if row.get("q2"):
+                    st.markdown(f"**🎯 Focus problem:** {row['q2']}")
+                if row.get("brain_dump"):
+                    st.markdown(f"**🧠 Brain dump:** {row['brain_dump']}")
+                if row.get("info_capture"):
+                    st.markdown(f"**🔗 Captured:** {row['info_capture']}")
+
+
+# ──────────────────────────────────────────────────────────────
 #  ROUTER
 # ──────────────────────────────────────────────────────────────
 PAGES = {
-    "Dashboard":      page_dashboard,
-    "Daily Routine":  page_daily,
-    "Goals":          page_goals,
-    "Habits":         page_habits,
-    "Reviews":        page_reviews,
-    "Skills & Roadmap": page_skills,
-    "Finance Tips":   page_finance,
-    "Profile":        page_profile,
-    "Admin":          page_admin,
+    "dashboard":    page_dashboard,
+    "daily":        page_daily,
+    "goals":        page_goals,
+    "habits":       page_habits,
+    "reviews":      page_reviews,
+    "skills":       page_skills,
+    "finance":      page_finance,
+    "journal":      page_journal,
+    "profile":      page_profile,
+    "admin":        page_admin,
 }
 
 def main():
@@ -2461,29 +2518,11 @@ def main():
         page_auth()
         return
 
-    selected = render_sidebar()  # always returns the currently selected nav label
+    selected = render_sidebar()
 
-    # Map nav label → page key via keyword matching (works for EN + BN)
-    # Map query param → page key
-    PAGE_KEYWORDS = {
-        "Dashboard":        ["dashboard"],
-        "Daily Routine":    ["daily", "routine"],
-        "Goals":            ["goal"],
-        "Habits":           ["habit"],
-        "Reviews":          ["review"],
-        "Skills & Roadmap": ["skill", "roadmap"],
-        "Finance Tips":     ["finance"],
-        "Profile":          ["profile"],
-        "Admin":            ["admin"],
-    }
-    qp = st.query_params.get("page", "")
-    sel_lower = (qp or selected or "").lower().replace("_", " ")
-    matched = "Dashboard"
-    for page, keywords in PAGE_KEYWORDS.items():
-        if any(kw in sel_lower for kw in keywords):
-            matched = page
-            break
-    PAGES[matched]()
+    # Route to the correct page — selected is now a simple key like "dashboard"
+    page_fn = PAGES.get(selected, page_dashboard)
+    page_fn()
 
 
 if __name__ == "__main__":
